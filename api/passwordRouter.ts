@@ -4,6 +4,16 @@ import { signPasswordToken, verifyPasswordToken, getPasswordCookieName } from ".
 import { env } from "./lib/env";
 import { TRPCError } from "@trpc/server";
 
+function parseCookies(cookieHeader: string): Record<string, string> {
+  const cookies: Record<string, string> = {};
+  if (!cookieHeader) return cookies;
+  cookieHeader.split(";").forEach((cookie) => {
+    const [name, ...rest] = cookie.trim().split("=");
+    if (name) cookies[name] = rest.join("=");
+  });
+  return cookies;
+}
+
 function buildCookieString(
   name: string,
   value: string,
@@ -14,7 +24,7 @@ function buildCookieString(
   if (opts.httpOnly) cookie += "; HttpOnly";
   if (opts.secure) cookie += "; Secure";
   if (opts.sameSite) cookie += `; SameSite=${opts.sameSite}`;
-  if (opts.maxAge) cookie += `; Max-Age=${opts.maxAge}`;
+  if (opts.maxAge !== undefined) cookie += `; Max-Age=${opts.maxAge}`;
   return cookie;
 }
 
@@ -45,9 +55,9 @@ export const passwordRouter = createRouter({
         path: "/",
       });
 
-      ctx.resHeaders.append("Set-Cookie", cookieStr);
+      ctx.resHeaders.set("Set-Cookie", cookieStr);
 
-      return { success: true };
+      return { success: true, name: "Admin" };
     }),
 
   logout: publicQuery.mutation(async ({ ctx }) => {
@@ -59,7 +69,7 @@ export const passwordRouter = createRouter({
       path: "/",
     });
 
-    ctx.resHeaders.append("Set-Cookie", clearCookie);
+    ctx.resHeaders.set("Set-Cookie", clearCookie);
 
     return { success: true };
   }),
@@ -67,12 +77,7 @@ export const passwordRouter = createRouter({
   me: publicQuery.query(async ({ ctx }) => {
     const req = ctx.req as Request;
     const cookieHeader = req.headers.get("cookie") || "";
-    const cookies = Object.fromEntries(
-      cookieHeader.split(";").map((c) => {
-        const [k, ...v] = c.trim().split("=");
-        return [k, v.join("=")];
-      })
-    );
+    const cookies = parseCookies(cookieHeader);
 
     const token = cookies[getPasswordCookieName()];
     if (!token) return null;

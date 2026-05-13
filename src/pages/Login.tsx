@@ -1,18 +1,25 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { trpc } from "@/providers/trpc";
 import { Lock, Shield, Eye, EyeOff, Sparkles } from "lucide-react";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
 
+  const utils = trpc.useUtils();
+
   const loginMutation = trpc.password.login.useMutation({
-    onSuccess: () => {
-      window.location.href = "/#/dashboard";
+    onSuccess: async () => {
+      // Invalidate the me query so useAuth picks up the new session
+      await utils.password.me.invalidate();
+      // Navigate to dashboard
+      navigate("/dashboard");
     },
     onError: (err) => {
-      setError(err.message || "Contraseña incorrecta");
+      setError(err.message || "Contrasena incorrecta");
     },
   });
 
@@ -20,7 +27,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
     if (!password.trim()) {
-      setError("Ingresa tu contraseña");
+      setError("Ingresa tu contrasena");
       return;
     }
     loginMutation.mutate({ password });
