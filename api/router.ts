@@ -5,6 +5,7 @@ import { aiSummaryRouter } from "./aiSummaryRouter";
 import { feedbackRouter } from "./feedbackRouter";
 import { voiceRouter } from "./voiceRouter";
 import { dashboardRouter } from "./dashboardRouter";
+import { portalRouter } from "./clientRouter";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -16,6 +17,7 @@ export const appRouter = createRouter({
   feedback: feedbackRouter,
   voice: voiceRouter,
   dashboard: dashboardRouter,
+  portal: portalRouter,
 });
 
 export type AppRouter = typeof appRouter;

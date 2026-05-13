@@ -9,6 +9,7 @@ import EvaluationForm from "./pages/EvaluationForm";
 import AiSummary from "./pages/AiSummary";
 import FeedbackPage from "./pages/FeedbackPage";
 import Dashboard from "./pages/Dashboard";
+import ClientDashboard from "./pages/ClientDashboard";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/evaluation/:id/summary" element={<AiSummary />} />
         <Route path="/feedback" element={<FeedbackPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/client/:token" element={<ClientDashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

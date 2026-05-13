@@ -19,8 +19,13 @@ export const evaluationRouter = createRouter({
       })
     )
     .mutation(async ({ input }) => {
+      // Generate client token from restaurant name
+      const clientToken = input.restaurantName
+        ? input.restaurantName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 50)
+        : undefined;
       const id = await createEvaluation({
         ...input,
+        clientToken,
         status: "draft",
       });
       return { id };

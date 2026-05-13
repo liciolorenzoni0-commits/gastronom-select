@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Shield,
   MessageSquare,
+  ExternalLink,
 } from "lucide-react";
 
 export default function AiSummary() {
@@ -56,6 +57,11 @@ export default function AiSummary() {
       candidateName: candidate.fullName,
       role: candidate.role,
     });
+  };
+
+  const openKimiChat = () => {
+    // Open Kimi web chat in a new tab
+    window.open("https://chat.kimi.ai", "_blank", "noopener,noreferrer");
   };
 
   const summary = generateSummary.data || existingSummary;
@@ -230,6 +236,13 @@ export default function AiSummary() {
               <button onClick={handleGenerate} disabled={generateSummary.isPending} className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#475569] rounded-xl text-[13px] font-medium border border-[#E2E8F0] hover:border-[#CBD5E1] transition-all disabled:opacity-50">
                 {generateSummary.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 Regenerar
+              </button>
+              <button
+                onClick={openKimiChat}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#F0FDF4] text-[#166534] rounded-xl text-[13px] font-medium border border-[#BBF7D0] hover:border-[#86EFAC] transition-all"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Analizar con Kimi
               </button>
             </div>
           </div>

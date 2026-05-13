@@ -75,6 +75,7 @@ export const evaluations = mysqlTable("evaluations", {
     "pass",
   ]),
   generalNotes: text("generalNotes"),
+  clientToken: varchar("clientToken", { length: 100 }),
   aiSummaryId: bigint("aiSummaryId", {
     mode: "number",
     unsigned: true,
