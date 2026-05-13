@@ -21,30 +21,29 @@ export default function Home() {
           backgroundImage: `radial-gradient(circle at 1px 1px, #0F172A 1px, transparent 0)`,
           backgroundSize: '40px 40px'
         }} />
-        
+
         <div className="relative max-w-6xl mx-auto px-6 pt-32 pb-20 md:pt-40 md:pb-28">
           <div className="max-w-3xl">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#EAF2FF] rounded-full mb-8">
               <div className="w-1.5 h-1.5 rounded-full bg-[#2F80ED] animate-pulse" />
               <span className="text-[11px] font-semibold text-[#2F80ED] tracking-wide uppercase">
-                Exclusive Access
+                Acceso Exclusivo
               </span>
             </div>
 
             <h1 className="text-[40px] md:text-[56px] lg:text-[64px] font-semibold text-[#0F172A] leading-[1.1] tracking-tight">
-              The evaluation
+              La plataforma de
               <br />
-              platform for{" "}
-              <span className="text-[#2F80ED]">top</span>
+              evaluación para los
               <br />
-              <span className="text-[#2F80ED]">hospitality</span> clients
+              <span className="text-[#2F80ED]">mejores</span> clientes
+              <br />
+              <span className="text-[#2F80ED]">de hostelería</span>
             </h1>
 
             <p className="mt-6 text-[17px] text-[#64748B] leading-relaxed max-w-lg">
-              Gastronom Select connects Michelin-starred venues with exceptional
-              culinary talent through AI-powered evaluations and precise
-              candidate matching.
+              Gastronom Select conecta restaurantes Michelin con talento culinario excepcional a través de evaluaciones impulsadas por IA y una precisa selección de candidatos.
             </p>
 
             <div className="mt-10 flex flex-wrap gap-3">
@@ -52,14 +51,14 @@ export default function Home() {
                 to="/evaluate"
                 className="group inline-flex items-center gap-2.5 px-6 py-3.5 gradient-blue text-white rounded-xl text-[14px] font-semibold hover:shadow-lg hover:shadow-[#2F80ED]/20 transition-all"
               >
-                Start Evaluation
+                Iniciar Evaluación
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <Link
                 to="/feedback"
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-[#334155] rounded-xl text-[14px] font-medium border border-[#E2E8F0] hover:border-[#CBD5E1] hover:shadow-card-hover transition-all"
+                className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-[#334555] rounded-xl text-[14px] font-medium border border-[#E2E8F0] hover:border-[#CBD5E1] hover:shadow-card-hover transition-all"
               >
-                Share Feedback
+                Compartir Feedback
               </Link>
             </div>
           </div>
@@ -67,10 +66,10 @@ export default function Home() {
           {/* Stats Row */}
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: Users, label: "Placements", value: "2,400+", color: "#2F80ED" },
-              { icon: Star, label: "Avg. Rating", value: "9.4/10", color: "#C8A96B" },
-              { icon: TrendingUp, label: "Retention", value: "98%", color: "#22C55E" },
-              { icon: Award, label: "Partner Venues", value: "180+", color: "#8B5CF6" },
+              { icon: Users, label: "Colocaciones", value: "2,400+", color: "#2F80ED" },
+              { icon: Star, label: "Puntaje Prom.", value: "9.4/10", color: "#C8A96B" },
+              { icon: TrendingUp, label: "Retención", value: "98%", color: "#22C55E" },
+              { icon: Award, label: "Locales Asociados", value: "180+", color: "#8B5CF6" },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -98,10 +97,10 @@ export default function Home() {
       <div className="max-w-6xl mx-auto px-6 py-20">
         <div className="text-center mb-14">
           <span className="text-[11px] font-semibold text-[#2F80ED] tracking-[0.15em] uppercase">
-            Why Select
+            Por qué Select
           </span>
           <h2 className="text-[32px] md:text-[40px] font-semibold text-[#0F172A] mt-3 tracking-tight">
-            Built for <span className="text-[#2F80ED]">precision</span> hiring
+            Construido para la contratación <span className="text-[#2F80ED]">de precisión</span>
           </h2>
         </div>
 
@@ -109,20 +108,20 @@ export default function Home() {
           {[
             {
               icon: Zap,
-              title: "Ultra-Fast Flow",
-              desc: "Evaluate candidates in under 3 minutes with slider-based scoring and smart defaults. Designed for busy operators who need speed without sacrificing quality.",
+              title: "Evaluación Ultra Rápida",
+              desc: "Evalúa candidatos en menos de 3 minutos con puntuación por deslizadores y valores predeterminados inteligentes. Diseñado para operadores ocupados que necesitan velocidad sin sacrificar calidad.",
               color: "#2F80ED",
             },
             {
               icon: BrainCircuit,
-              title: "AI Summaries",
-              desc: "Our engine analyzes scores, notes, and voice transcripts to generate executive summaries with strengths, concerns, and cultural fit assessments.",
+              title: "Resúmenes con IA",
+              desc: "Nuestro motor analiza puntajes, notas y transcripciones de voz para generar resúmenes ejecutivos con fortalezas, preocupaciones y evaluaciones de ajuste cultural.",
               color: "#8B5CF6",
             },
             {
               icon: Shield,
-              title: "Verified Talent",
-              desc: "Every candidate undergoes rigorous vetting including practical exams, reference checks, and background verification before reaching your inbox.",
+              title: "Talento Verificado",
+              desc: "Cada candidato pasa por una rigurosa verificación que incluye exámenes prácticos, verificación de referencias y cheques de antecedentes antes de llegar a tu bandeja.",
               color: "#22C55E",
             },
           ].map((feature) => (
@@ -155,28 +154,28 @@ export default function Home() {
         <div className="bg-white rounded-3xl border border-[#E2E8F0]/60 shadow-card overflow-hidden">
           <div className="p-8 md:p-12">
             <span className="text-[11px] font-semibold text-[#2F80ED] tracking-[0.15em] uppercase">
-              The Process
+              El Proceso
             </span>
             <h2 className="text-[28px] md:text-[36px] font-semibold text-[#0F172A] mt-3 tracking-tight">
-              Three steps to your next <span className="text-[#C8A96B]">star</span>
+              Tres pasos hacia tu próxima <span className="text-[#C8A96B]">estrella</span>
             </h2>
 
             <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
                   step: "01",
-                  title: "Receive Candidate",
-                  desc: "Get a unique evaluation link via WhatsApp or email with full candidate profile, CV, and skill tags.",
+                  title: "Recibe al Candidato",
+                  desc: "Obtén un enlace de evaluación único vía WhatsApp o email con el perfil completo del candidato, CV y etiquetas de habilidades.",
                 },
                 {
                   step: "02",
-                  title: "Score & Record",
-                  desc: "Use intuitive sliders to score competencies. Add voice notes for quick observations. Takes under 3 minutes.",
+                  title: "Puntúa y Graba",
+                  desc: "Usa deslizadores intuitivos para puntuar competencias. Añade notas de voz para observaciones rápidas. Toma menos de 3 minutos.",
                 },
                 {
                   step: "03",
-                  title: "AI Summary",
-                  desc: "Receive an instant executive summary with recommendation, strengths, concerns, and cultural fit analysis.",
+                  title: "Resumen con IA",
+                  desc: "Recibe un resumen ejecutivo instantáneo con recomendación, fortalezas, preocupaciones y análisis de ajuste cultural.",
                 },
               ].map((item) => (
                 <div key={item.step} className="relative">
@@ -201,33 +200,31 @@ export default function Home() {
       {/* CTA */}
       <div className="max-w-6xl mx-auto px-6 py-16">
         <div className="gradient-navy rounded-3xl p-10 md:p-14 text-center relative overflow-hidden">
-          {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#2F80ED]/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#C8A96B]/10 rounded-full translate-y-1/2 -translate-x-1/2" />
-          
+
           <div className="relative">
             <h2 className="text-[32px] md:text-[40px] font-semibold text-white tracking-tight">
-              Ready to evaluate
+              ¿Listo para evaluar a
               <br />
-              your next <span className="text-[#C8A96B]">candidate?</span>
+              tu próximo <span className="text-[#C8A96B]">candidato?</span>
             </h2>
             <p className="mt-4 text-[15px] text-[#94A3B8] max-w-md mx-auto">
-              Enter your evaluation token to access the candidate profile and
-              begin the assessment.
+              Ingresa tu token de evaluación para acceder al perfil del candidato y comenzar la valoración.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
                 to="/evaluate"
                 className="group inline-flex items-center gap-2 px-7 py-3.5 bg-[#2F80ED] text-white rounded-xl text-[14px] font-semibold hover:bg-[#2563EB] transition-colors"
               >
-                Enter Token
+                Ingresar Token
                 <ChevronRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/feedback"
                 className="inline-flex items-center gap-2 px-7 py-3.5 bg-white/10 text-white rounded-xl text-[14px] font-medium border border-white/20 hover:bg-white/15 transition-colors"
               >
-                Share Feedback
+                Compartir Feedback
               </Link>
             </div>
           </div>
@@ -249,7 +246,7 @@ export default function Home() {
             </span>
           </div>
           <span className="text-[12px] text-[#94A3B8]">
-            &copy; {new Date().getFullYear()} Gastronom Culinary Staffing. All rights reserved.
+            &copy; {new Date().getFullYear()} Gastronom Culinary Staffing. Todos los derechos reservados.
           </span>
         </div>
       </footer>

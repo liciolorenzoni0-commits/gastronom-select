@@ -17,7 +17,7 @@ export default function Evaluate() {
     e.preventDefault();
     setError("");
     if (!token.trim()) {
-      setError("Please enter an evaluation token");
+      setError("Por favor ingresa un token de evaluación");
       return;
     }
     try {
@@ -25,17 +25,17 @@ export default function Evaluate() {
       if (result.data) {
         navigate(`/candidate/${token.trim()}`);
       } else {
-        setError("Candidate not found. Please check your token.");
+        setError("Candidato no encontrado. Verifica tu token.");
       }
     } catch {
-      setError("Candidate not found. Please check your token.");
+      setError("Candidato no encontrado. Verifica tu token.");
     }
   };
 
   const demoTokens = [
     { token: "chef-elena-2026", name: "Elena V.", role: "Sous Chef" },
-    { token: "chef-marcus-2026", name: "Marcus C.", role: "Executive Chef" },
-    { token: "pastry-sophie-2026", name: "Sophie L.", role: "Pastry Chef" },
+    { token: "chef-marcus-2026", name: "Marcus C.", role: "Chef Ejecutivo" },
+    { token: "pastry-sophie-2026", name: "Sophie L.", role: "Chef Pastelera" },
   ];
 
   return (
@@ -48,10 +48,10 @@ export default function Evaluate() {
               <Fingerprint className="w-6 h-6 text-[#2F80ED]" />
             </div>
             <h1 className="text-[24px] font-semibold text-[#0F172A] tracking-tight">
-              Enter Evaluation Token
+              Ingresar Token de Evaluación
             </h1>
             <p className="text-[14px] text-[#64748B] mt-2">
-              Input your unique token to access the candidate profile
+              Ingresa tu token único para acceder al perfil del candidato
             </p>
           </div>
 
@@ -62,7 +62,7 @@ export default function Evaluate() {
                 type="text"
                 value={token}
                 onChange={(e) => { setToken(e.target.value); setError(""); }}
-                placeholder="e.g., chef-elena-2026"
+                placeholder="ej. chef-elena-2026"
                 className="w-full pl-11 pr-4 py-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[14px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED] transition-all"
               />
             </div>
@@ -79,7 +79,7 @@ export default function Evaluate() {
               disabled={candidateQuery.isLoading}
               className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 gradient-blue text-white rounded-xl text-[14px] font-semibold hover:shadow-lg hover:shadow-[#2F80ED]/20 transition-all disabled:opacity-50"
             >
-              {candidateQuery.isLoading ? "Searching..." : "Access Profile"}
+              {candidateQuery.isLoading ? "Buscando..." : "Acceder al Perfil"}
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -88,7 +88,7 @@ export default function Evaluate() {
         {/* Quick Access */}
         <div className="mt-6">
           <p className="text-[11px] font-semibold text-[#94A3B8] tracking-[0.1em] uppercase text-center mb-4">
-            Quick Access
+            Acceso Rápido
           </p>
           <div className="space-y-2.5">
             {demoTokens.map((demo) => (

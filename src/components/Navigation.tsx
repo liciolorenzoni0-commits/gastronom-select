@@ -41,10 +41,10 @@ export default function Navigation() {
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-7">
               <Link to="/" className={navLinkClass("/")}>
-                Overview
+                Inicio
               </Link>
               <Link to="/evaluate" className={navLinkClass("/evaluate")}>
-                Evaluate
+                Evaluar
               </Link>
               <Link to="/feedback" className={navLinkClass("/feedback")}>
                 Feedback
@@ -56,7 +56,7 @@ export default function Navigation() {
                 >
                   <span className="flex items-center gap-1.5">
                     <LayoutDashboard className="w-3.5 h-3.5" />
-                    Dashboard
+                    Panel
                   </span>
                 </Link>
               )}
@@ -88,7 +88,7 @@ export default function Navigation() {
                   to="/login"
                   className="px-4 py-2 text-[12px] font-semibold text-white gradient-blue rounded-lg hover:opacity-90 transition-opacity"
                 >
-                  Sign In
+                  Entrar
                 </Link>
               )}
 
@@ -105,11 +105,11 @@ export default function Navigation() {
           {/* Mobile Nav */}
           {mobileOpen && (
             <div className="md:hidden border-t border-[#E2E8F0] px-5 py-4 space-y-3">
-              <Link to="/" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Overview</Link>
-              <Link to="/evaluate" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Evaluate</Link>
+              <Link to="/" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Inicio</Link>
+              <Link to="/evaluate" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Evaluar</Link>
               <Link to="/feedback" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Feedback</Link>
               {isAuthenticated && (
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Dashboard</Link>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Panel</Link>
               )}
             </div>
           )}

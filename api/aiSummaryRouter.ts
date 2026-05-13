@@ -31,43 +31,43 @@ export const aiSummaryRouter = createRouter({
       const concerns: string[] = [];
 
       const lowerNotes = input.notes.toLowerCase();
-      if (lowerNotes.includes("knife") || lowerNotes.includes("technical"))
-        strengths.push("Strong technical foundation with precise execution");
-      if (lowerNotes.includes("sauce") || lowerNotes.includes("flavor"))
-        strengths.push("Deep understanding of flavor profiles and sauce work");
-      if (lowerNotes.includes("lead") || lowerNotes.includes("team"))
-        strengths.push("Demonstrated leadership abilities with team management experience");
-      if (lowerNotes.includes("plate") || lowerNotes.includes("present"))
-        strengths.push("Exceptional plating and presentation skills");
-      if (lowerNotes.includes("hygiene") || lowerNotes.includes("clean"))
-        strengths.push("Impeccable hygiene and organizational standards");
-      if (lowerNotes.includes("creative") || lowerNotes.includes("innovat"))
-        strengths.push("Creative approach to menu development and dish design");
-      if (lowerNotes.includes("michelin") || lowerNotes.includes("fine dining"))
-        strengths.push("Proven experience in high-pressure fine dining environments");
+      if (lowerNotes.includes("cuchillo") || lowerNotes.includes("técnica"))
+        strengths.push("Sólida base técnica con ejecución precisa");
+      if (lowerNotes.includes("salsa") || lowerNotes.includes("sabor"))
+        strengths.push("Profundo entendimiento de perfiles de sabor y salsas");
+      if (lowerNotes.includes("líder") || lowerNotes.includes("equipo"))
+        strengths.push("Capacidades de liderazgo demostradas con experiencia gestionando equipos");
+      if (lowerNotes.includes("plat") || lowerNotes.includes("present"))
+        strengths.push("Habilidades excepcionales de emplatado y presentación");
+      if (lowerNotes.includes("higiene") || lowerNotes.includes("limp"))
+        strengths.push("Estándares impecables de higiene y organización");
+      if (lowerNotes.includes("creativ") || lowerNotes.includes("innov"))
+        strengths.push("Enfoque creativo para el desarrollo de menú y diseño de platos");
+      if (lowerNotes.includes("michelin") || lowerNotes.includes("alta cocina"))
+        strengths.push("Experiencia comprobada en entornos de alta cocina bajo presión");
 
-      if (lowerNotes.includes("speed") || lowerNotes.includes("slow"))
-        concerns.push("Speed during peak service may need improvement");
-      if (lowerNotes.includes("stress") || lowerNotes.includes("pressure"))
-        concerns.push("Handling of high-stress situations could be a concern");
+      if (lowerNotes.includes("velocid") || lowerNotes.includes("lent"))
+        concerns.push("La velocidad durante el servicio punta podría mejorar");
+      if (lowerNotes.includes("estrés") || lowerNotes.includes("presión"))
+        concerns.push("El manejo de situaciones de alto estrés podría ser una preocupación");
       if (avgScore < 7)
-        concerns.push("Overall scores suggest candidate may need significant development");
-      if (lowerNotes.includes("language") || lowerNotes.includes("communicat"))
-        concerns.push("Communication skills may need assessment in team context");
+        concerns.push("Los puntajes generales sugieren que el candidato podría necesitar desarrollo significativo");
+      if (lowerNotes.includes("lenguaje") || lowerNotes.includes("comunic"))
+        concerns.push("Las habilidades de comunicación podrían necesitar evaluación en contexto de equipo");
 
       if (strengths.length === 0) {
-        strengths.push("Solid overall performance across evaluated competencies");
-        strengths.push("Demonstrates professional approach to culinary work");
+        strengths.push("Desempeño sólido en general en las competencias evaluadas");
+        strengths.push("Demuestra enfoque profesional hacia el trabajo culinario");
       }
       if (concerns.length === 0) {
-        concerns.push("Minor areas for improvement in specific technical skills");
+        concerns.push("Áreas menores para mejorar en habilidades técnicas específicas");
       }
 
       let culturalFit: "excellent" | "good" | "moderate" | "poor" = "good";
       if (avgScore >= 9) culturalFit = "excellent";
       else if (avgScore < 7) culturalFit = "moderate";
 
-      const summary = `${input.candidateName} presents as a ${avgScore >= 8.5 ? "strong" : avgScore >= 7 ? "solid" : "developing"} candidate for the ${input.role} position, with an average competency score of ${avgScore.toFixed(1)}/10 across all evaluated metrics. ${strengths.length > 2 ? "Their standout strengths include " + strengths.slice(0, 2).join(" and ").toLowerCase() + ", indicating readiness for the demands of fine dining service." : "They demonstrate competency in core areas with room for growth in specialized skills."} ${concerns.length > 0 ? "Key considerations include " + concerns[0].toLowerCase() + ", which should be monitored during onboarding." : "No significant concerns were identified during the evaluation."} Overall, this candidate is ${avgScore >= 8 ? "recommended for hire" : avgScore >= 7 ? "worth considering with a trial period" : "recommended for further development before placement"}.`;
+      const summary = `${input.candidateName} se presenta como un candidato ${avgScore >= 8.5 ? "fuerte" : avgScore >= 7 ? "sólido" : "en desarrollo"} para el puesto de ${input.role}, con una puntuación promedio de competencias de ${avgScore.toFixed(1)}/10 en todas las áreas evaluadas. ${strengths.length > 2 ? "Sus fortalezas destacadas incluyen " + strengths.slice(0, 2).join(" y ").toLowerCase() + ", lo que indica preparación para las demandas del servicio de alta cocina." : "Demuestran competencia en áreas centrales con espacio para crecer en habilidades especializadas."} ${concerns.length > 0 ? "Consideraciones clave incluyen " + concerns[0].toLowerCase() + ", lo cual debería monitorearse durante la integración." : "No se identificaron preocupaciones significativas durante la evaluación."} En general, este candidato es ${avgScore >= 8 ? "recomendado para contratación" : avgScore >= 7 ? "vale la pena considerar con un período de prueba" : "recomendado para desarrollo adicional antes de la colocación"}.`;
 
       const recommendationScore = Math.min(10, Math.max(0, avgScore + (Math.random() * 0.4 - 0.2)));
 

@@ -33,8 +33,8 @@ export default function FeedbackPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!clientName.trim()) { setError("Enter your name"); return; }
-    if (serviceRating === 0) { setError("Rate our service"); return; }
+    if (!clientName.trim()) { setError("Ingresa tu nombre"); return; }
+    if (serviceRating === 0) { setError("Califica nuestro servicio"); return; }
 
     submitFeedback.mutate({
       clientName,
@@ -68,15 +68,12 @@ export default function FeedbackPage() {
           <div className="w-16 h-16 rounded-2xl bg-[#DCFCE7] flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-[#22C55E]" />
           </div>
-          <h1 className="text-[24px] font-semibold text-[#0F172A]">Thank You</h1>
+          <h1 className="text-[24px] font-semibold text-[#0F172A]">Gracias</h1>
           <p className="text-[14px] text-[#64748B] mt-2">
-            Your feedback helps us improve for the entire hospitality community.
+            Tu feedback nos ayuda a mejorar para toda la comunidad de hostelería.
           </p>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 mt-6 px-6 py-3 gradient-blue text-white rounded-xl text-[13px] font-semibold"
-          >
-            Back to Home
+          <Link to="/" className="inline-flex items-center gap-2 mt-6 px-6 py-3 gradient-blue text-white rounded-xl text-[13px] font-semibold">
+            Volver al Inicio
           </Link>
         </div>
       </div>
@@ -91,7 +88,7 @@ export default function FeedbackPage() {
           className="flex items-center gap-2 text-[13px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          Volver
         </button>
 
         <div className="bg-white rounded-2xl border border-[#E2E8F0]/60 shadow-card p-8">
@@ -100,105 +97,46 @@ export default function FeedbackPage() {
               <MessageSquare className="w-6 h-6 text-[#D97706]" />
             </div>
             <h1 className="text-[22px] font-semibold text-[#0F172A] tracking-tight">
-              Client Feedback
+              Feedback del Cliente
             </h1>
             <p className="text-[13px] text-[#64748B] mt-1">
-              Help us improve our recruitment service
+              Ayúdanos a mejorar nuestro servicio de reclutamiento
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Your Info */}
             <div className="space-y-3">
-              <input
-                type="text"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                placeholder="Your name *"
-                className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED] transition-all"
-              />
-              <input
-                type="email"
-                value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-                placeholder="Email (optional)"
-                className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED] transition-all"
-              />
-              <input
-                type="text"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
-                placeholder="Restaurant / Venue"
-                className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED] transition-all"
-              />
+              <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre *" className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED]" />
+              <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="Email (opcional)" className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED]" />
+              <input type="text" value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} placeholder="Restaurante / Local" className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED]" />
             </div>
 
-            {/* Ratings */}
             <div className="p-5 bg-[#F8FAFC] rounded-xl space-y-4">
-              <StarRating value={serviceRating} onChange={setServiceRating} label="Overall Service *" />
-              <StarRating value={responsivenessRating} onChange={setResponsivenessRating} label="Responsiveness" />
-              <StarRating value={candidateQualityRating} onChange={setCandidateQualityRating} label="Candidate Quality" />
+              <StarRating value={serviceRating} onChange={setServiceRating} label="Servicio General *" />
+              <StarRating value={responsivenessRating} onChange={setResponsivenessRating} label="Tiempo de Respuesta" />
+              <StarRating value={candidateQualityRating} onChange={setCandidateQualityRating} label="Calidad del Candidato" />
             </div>
 
-            {/* NPS */}
             <div>
               <label className="block text-[12px] font-medium text-[#64748B] mb-2">
-                Would you recommend Gastronom?
+                ¿Recomendarías Gastronom a otros restaurantes?
               </label>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setWouldRecommend(true)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold border transition-all ${
-                    wouldRecommend === true
-                      ? "bg-[#DCFCE7] border-[#BBF7D0] text-[#166534]"
-                      : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]"
-                  }`}
-                >
-                  <ThumbsUp className="w-3.5 h-3.5" />
-                  Yes
+                <button type="button" onClick={() => setWouldRecommend(true)} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold border transition-all ${wouldRecommend === true ? "bg-[#DCFCE7] border-[#BBF7D0] text-[#166534]" : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B]"}`}>
+                  <ThumbsUp className="w-3.5 h-3.5" /> Sí
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setWouldRecommend(false)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold border transition-all ${
-                    wouldRecommend === false
-                      ? "bg-[#FEE2E2] border-[#FECACA] text-[#991B1B]"
-                      : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]"
-                  }`}
-                >
-                  <ThumbsDown className="w-3.5 h-3.5" />
-                  No
+                <button type="button" onClick={() => setWouldRecommend(false)} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold border transition-all ${wouldRecommend === false ? "bg-[#FEE2E2] border-[#FECACA] text-[#991B1B]" : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B]"}`}>
+                  <ThumbsDown className="w-3.5 h-3.5" /> No
                 </button>
               </div>
             </div>
 
-            {/* Comments */}
-            <textarea
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              placeholder="Additional comments..."
-              rows={3}
-              className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED] resize-none transition-all"
-            />
+            <textarea value={comments} onChange={(e) => setComments(e.target.value)} placeholder="Comentarios adicionales..." rows={3} className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED] resize-none" />
 
-            {error && (
-              <div className="flex items-center gap-2 text-[#EF4444] text-[13px]">
-                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                {error}
-              </div>
-            )}
+            {error && <div className="flex items-center gap-2 text-[#EF4444] text-[13px]"><AlertCircle className="w-3.5 h-3.5" />{error}</div>}
 
-            <button
-              type="submit"
-              disabled={submitFeedback.isPending}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 gradient-blue text-white rounded-xl text-[14px] font-semibold hover:shadow-lg hover:shadow-[#2F80ED]/20 transition-all disabled:opacity-50"
-            >
-              {submitFeedback.isPending ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Submitting</>
-              ) : (
-                <><Send className="w-4 h-4" /> Submit Feedback</>
-              )}
+            <button type="submit" disabled={submitFeedback.isPending} className="w-full flex items-center justify-center gap-2 px-6 py-3.5 gradient-blue text-white rounded-xl text-[14px] font-semibold hover:shadow-lg transition-all disabled:opacity-50">
+              {submitFeedback.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando</> : <><Send className="w-4 h-4" /> Enviar Feedback</>}
             </button>
           </form>
         </div>

@@ -72,9 +72,9 @@ export default function AiSummary() {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-6">
         <div className="text-center">
-          <h1 className="text-[24px] font-semibold text-[#0F172A]">Evaluation Not Found</h1>
+          <h1 className="text-[24px] font-semibold text-[#0F172A]">Evaluación No Encontrada</h1>
           <Link to="/evaluate" className="text-[#2F80ED] text-[14px] mt-2 inline-block">
-            Back to Search
+            Volver a Búsqueda
           </Link>
         </div>
       </div>
@@ -82,10 +82,10 @@ export default function AiSummary() {
   }
 
   const recData: Record<string, { label: string; bg: string; text: string; border: string }> = {
-    strong_hire: { label: "Strong Hire", bg: "bg-[#DCFCE7]", text: "text-[#166534]", border: "border-[#BBF7D0]" },
-    hire: { label: "Hire", bg: "bg-[#EAF2FF]", text: "text-[#1E40AF]", border: "border-[#BFDBFE]" },
-    consider: { label: "Consider", bg: "bg-[#FEF9C3]", text: "text-[#854D0E]", border: "border-[#FDE68A]" },
-    pass: { label: "Pass", bg: "bg-[#FEE2E2]", text: "text-[#991B1B]", border: "border-[#FECACA]" },
+    strong_hire: { label: "Contratar Fuerte", bg: "bg-[#DCFCE7]", text: "text-[#166534]", border: "border-[#BBF7D0]" },
+    hire: { label: "Contratar", bg: "bg-[#EAF2FF]", text: "text-[#1E40AF]", border: "border-[#BFDBFE]" },
+    consider: { label: "Considerar", bg: "bg-[#FEF9C3]", text: "text-[#854D0E]", border: "border-[#FDE68A]" },
+    pass: { label: "Rechazar", bg: "bg-[#FEE2E2]", text: "text-[#991B1B]", border: "border-[#FECACA]" },
   };
   const rec = recData[evaluation.recommendation || "consider"];
 
@@ -98,7 +98,7 @@ export default function AiSummary() {
           className="flex items-center gap-2 text-[13px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          Volver
         </button>
 
         <div className="flex items-center gap-3 mb-8">
@@ -107,11 +107,11 @@ export default function AiSummary() {
           </div>
           <div>
             <h1 className="text-[22px] font-semibold text-[#0F172A] tracking-tight">
-              AI Executive Summary
+              Resumen Ejecutivo con IA
             </h1>
             {candidate && (
               <p className="text-[12px] text-[#64748B]">
-                {candidate.fullName} · Evaluation #{evaluationId}
+                {candidate.fullName} · Evaluación #{evaluationId}
               </p>
             )}
           </div>
@@ -122,8 +122,8 @@ export default function AiSummary() {
             <div className="w-14 h-14 rounded-2xl bg-[#EAF2FF] flex items-center justify-center mb-4">
               <Loader2 className="w-6 h-6 text-[#2F80ED] animate-spin" />
             </div>
-            <p className="text-[14px] text-[#64748B]">Analyzing evaluation data...</p>
-            <p className="text-[12px] text-[#94A3B8] mt-1">This takes a few seconds</p>
+            <p className="text-[14px] text-[#64748B]">Analizando datos de evaluación...</p>
+            <p className="text-[12px] text-[#94A3B8] mt-1">Esto toma unos segundos</p>
           </div>
         )}
 
@@ -145,7 +145,7 @@ export default function AiSummary() {
                   {summary.culturalFit && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]">
                       <Shield className="w-3 h-3" />
-                      {summary.culturalFit} fit
+                      Ajuste {summary.culturalFit}
                     </span>
                   )}
                 </div>
@@ -154,12 +154,8 @@ export default function AiSummary() {
 
             {/* Executive Summary */}
             <div className="bg-white rounded-2xl border border-[#E2E8F0]/60 shadow-card p-6">
-              <h2 className="text-[14px] font-semibold text-[#0F172A] mb-3">
-                Summary
-              </h2>
-              <p className="text-[14px] text-[#475569] leading-[1.7]">
-                {summary.executiveSummary}
-              </p>
+              <h2 className="text-[14px] font-semibold text-[#0F172A] mb-3">Resumen</h2>
+              <p className="text-[14px] text-[#475569] leading-[1.7]">{summary.executiveSummary}</p>
             </div>
 
             {/* Strengths & Concerns */}
@@ -168,7 +164,7 @@ export default function AiSummary() {
                 <div className="bg-white rounded-2xl border border-[#E2E8F0]/60 shadow-card p-6">
                   <h3 className="flex items-center gap-2 text-[12px] font-semibold text-[#166534] uppercase tracking-wider mb-4">
                     <ThumbsUp className="w-3.5 h-3.5" />
-                    Strengths
+                    Fortalezas
                   </h3>
                   <ul className="space-y-3">
                     {(summary.strengths as string[]).map((s, i) => (
@@ -185,7 +181,7 @@ export default function AiSummary() {
                 <div className="bg-white rounded-2xl border border-[#E2E8F0]/60 shadow-card p-6">
                   <h3 className="flex items-center gap-2 text-[12px] font-semibold text-[#991B1B] uppercase tracking-wider mb-4">
                     <AlertTriangle className="w-3.5 h-3.5" />
-                    Considerations
+                    Consideraciones
                   </h3>
                   <ul className="space-y-3">
                     {(summary.concerns as string[]).map((c, i) => (
@@ -204,7 +200,7 @@ export default function AiSummary() {
               <div className="bg-white rounded-2xl border border-[#E2E8F0]/60 shadow-card p-6">
                 <h2 className="text-[14px] font-semibold text-[#0F172A] mb-5 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-[#2F80ED]" />
-                  Score Breakdown
+                  Desglose de Puntajes
                 </h2>
                 <div className="space-y-3.5">
                   {evaluation.scores.map((s) => {
@@ -216,17 +212,7 @@ export default function AiSummary() {
                           <span className="text-[13px] font-bold text-[#0F172A]">{s.score}</span>
                         </div>
                         <div className="h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{
-                              width: `${pct}%`,
-                              background: pct >= 80
-                                ? "linear-gradient(90deg, #22C55E, #4ADE80)"
-                                : pct >= 60
-                                ? "linear-gradient(90deg, #F59E0B, #FBBF24)"
-                                : "linear-gradient(90deg, #EF4444, #F87171)",
-                            }}
-                          />
+                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: pct >= 80 ? "linear-gradient(90deg, #22C55E, #4ADE80)" : pct >= 60 ? "linear-gradient(90deg, #F59E0B, #FBBF24)" : "linear-gradient(90deg, #EF4444, #F87171)" }} />
                         </div>
                       </div>
                     );
@@ -237,24 +223,13 @@ export default function AiSummary() {
 
             {/* Actions */}
             <div className="flex flex-wrap gap-3 pt-2 pb-4">
-              <Link
-                to="/feedback"
-                className="flex items-center gap-2 px-5 py-2.5 gradient-blue text-white rounded-xl text-[13px] font-semibold hover:shadow-lg hover:shadow-[#2F80ED]/20 transition-all"
-              >
+              <Link to="/feedback" className="flex items-center gap-2 px-5 py-2.5 gradient-blue text-white rounded-xl text-[13px] font-semibold hover:shadow-lg transition-all">
                 <MessageSquare className="w-3.5 h-3.5" />
-                Feedback to Gastronom
+                Feedback a Gastronom
               </Link>
-              <button
-                onClick={handleGenerate}
-                disabled={generateSummary.isPending}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#475569] rounded-xl text-[13px] font-medium border border-[#E2E8F0] hover:border-[#CBD5E1] transition-all disabled:opacity-50"
-              >
-                {generateSummary.isPending ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5" />
-                )}
-                Regenerate
+              <button onClick={handleGenerate} disabled={generateSummary.isPending} className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#475569] rounded-xl text-[13px] font-medium border border-[#E2E8F0] hover:border-[#CBD5E1] transition-all disabled:opacity-50">
+                {generateSummary.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                Regenerar
               </button>
             </div>
           </div>

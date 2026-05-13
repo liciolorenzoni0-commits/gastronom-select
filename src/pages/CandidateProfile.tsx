@@ -45,16 +45,16 @@ export default function CandidateProfile() {
           <div className="w-16 h-16 rounded-2xl bg-[#F1F5F9] flex items-center justify-center mx-auto mb-4">
             <Briefcase className="w-7 h-7 text-[#CBD5E1]" />
           </div>
-          <h1 className="text-[24px] font-semibold text-[#0F172A]">Candidate Not Found</h1>
+          <h1 className="text-[24px] font-semibold text-[#0F172A]">Candidato No Encontrado</h1>
           <p className="text-[14px] text-[#64748B] mt-2">
-            The evaluation token doesn't match any candidate.
+            El token de evaluación no coincide con ningún candidato.
           </p>
           <Link
             to="/evaluate"
             className="inline-flex items-center gap-2 mt-6 px-6 py-3 gradient-blue text-white rounded-xl text-[14px] font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Search
+            Volver a Búsqueda
           </Link>
         </div>
       </div>
@@ -62,11 +62,11 @@ export default function CandidateProfile() {
   }
 
   const roleLabels: Record<string, string> = {
-    chef: "Executive Chef",
+    chef: "Chef Ejecutivo",
     sous_chef: "Sous Chef",
-    manager: "Restaurant Manager",
-    waiter: "Senior Waiter",
-    bartender: "Head Bartender",
+    manager: "Gerente de Restaurante",
+    waiter: "Camarero Senior",
+    bartender: "Jefe de Bar",
     host: "Maître d'Hôtel",
   };
 
@@ -84,7 +84,7 @@ export default function CandidateProfile() {
           className="flex items-center gap-2 text-[13px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          Volver
         </button>
 
         {/* Profile Header Card */}
@@ -125,7 +125,7 @@ export default function CandidateProfile() {
                   {candidate.experienceYears && (
                     <span className="flex items-center gap-1.5 text-[12px] text-[#64748B]">
                       <Clock className="w-3.5 h-3.5" />
-                      {candidate.experienceYears} years
+                      {candidate.experienceYears} años exp.
                     </span>
                   )}
                   {candidate.email && (
@@ -152,7 +152,7 @@ export default function CandidateProfile() {
                 disabled={startNewEvaluation.isPending}
                 className="flex-shrink-0 px-5 py-2.5 gradient-blue text-white rounded-xl text-[13px] font-semibold hover:shadow-lg hover:shadow-[#2F80ED]/20 transition-all disabled:opacity-50"
               >
-                {startNewEvaluation.isPending ? "Creating..." : "New Evaluation"}
+                {startNewEvaluation.isPending ? "Creando..." : "Nueva Evaluación"}
               </button>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function CandidateProfile() {
               <div className="bg-white rounded-2xl border border-[#E2E8F0]/60 shadow-card p-6">
                 <h3 className="flex items-center gap-2 text-[14px] font-semibold text-[#0F172A] mb-4">
                   <Tag className="w-4 h-4 text-[#2F80ED]" />
-                  Skills & Expertise
+                  Habilidades y Experiencia
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag) => (
@@ -185,7 +185,7 @@ export default function CandidateProfile() {
             <div className="bg-white rounded-2xl border border-[#E2E8F0]/60 shadow-card p-6">
               <h3 className="flex items-center gap-2 text-[14px] font-semibold text-[#0F172A] mb-4">
                 <FileText className="w-4 h-4 text-[#2F80ED]" />
-                Evaluation History
+                Historial de Evaluaciones
               </h3>
               {evaluations.length === 0 ? (
                 <div className="text-center py-8">
@@ -193,7 +193,7 @@ export default function CandidateProfile() {
                     <FileText className="w-5 h-5 text-[#CBD5E1]" />
                   </div>
                   <p className="text-[13px] text-[#94A3B8]">
-                    No evaluations yet. Start the first one.
+                    Sin evaluaciones aún. Inicia la primera.
                   </p>
                 </div>
               ) : (
@@ -209,11 +209,11 @@ export default function CandidateProfile() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-[#0F172A]">
-                          {ev.restaurantName || "Evaluation"}
+                          {ev.restaurantName || "Evaluación"}
                         </p>
                         <p className="text-[12px] text-[#94A3B8]">
-                          {ev.interviewerName || "Anonymous"} ·{" "}
-                          {new Date(ev.createdAt).toLocaleDateString()}
+                          {ev.interviewerName || "Anónimo"} ·{" "}
+                          {new Date(ev.createdAt).toLocaleDateString("es-ES")}
                         </p>
                       </div>
                       {ev.overallScore && (
@@ -235,7 +235,7 @@ export default function CandidateProfile() {
             {latestEval?.overallScore && (
               <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-2xl p-6 text-white">
                 <span className="text-[11px] font-semibold text-[#64748B] tracking-[0.1em] uppercase">
-                  Latest Score
+                  Puntaje Reciente
                 </span>
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-[48px] font-bold text-[#C8A96B] tracking-tight">
@@ -247,7 +247,7 @@ export default function CandidateProfile() {
                   <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10">
                     <Shield className="w-3 h-3 text-[#22C55E]" />
                     <span className="text-[11px] font-medium text-[#22C55E] capitalize">
-                      {latestAiSummary.culturalFit} fit
+                      Ajuste {latestAiSummary.culturalFit}
                     </span>
                   </div>
                 )}
@@ -259,7 +259,7 @@ export default function CandidateProfile() {
               <div className="bg-white rounded-2xl border border-[#E2E8F0]/60 shadow-card p-6">
                 <h3 className="flex items-center gap-2 text-[14px] font-semibold text-[#0F172A] mb-3">
                   <Award className="w-4 h-4 text-[#C8A96B]" />
-                  AI Summary
+                  Resumen con IA
                 </h3>
                 <p className="text-[13px] text-[#64748B] leading-relaxed line-clamp-4">
                   {latestAiSummary.executiveSummary}
@@ -268,7 +268,7 @@ export default function CandidateProfile() {
                   to={`/evaluation/${latestEval!.id}/summary`}
                   className="inline-flex items-center gap-1 mt-4 text-[12px] font-semibold text-[#2F80ED] hover:underline"
                 >
-                  View full summary
+                  Ver resumen completo
                   <ChevronRight className="w-3 h-3" />
                 </Link>
               </div>
@@ -286,8 +286,8 @@ export default function CandidateProfile() {
                   <FileText className="w-4 h-4 text-[#64748B]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[13px] font-semibold text-[#0F172A]">View CV</p>
-                  <p className="text-[11px] text-[#94A3B8]">Full resume</p>
+                  <p className="text-[13px] font-semibold text-[#0F172A]">Ver CV</p>
+                  <p className="text-[11px] text-[#94A3B8]">Currículum completo</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-[#CBD5E1]" />
               </a>
@@ -301,10 +301,10 @@ export default function CandidateProfile() {
 
 function RecommendationBadge({ recommendation }: { recommendation: string }) {
   const styles: Record<string, { bg: string; text: string; label: string }> = {
-    strong_hire: { bg: "bg-[#DCFCE7]", text: "text-[#166534]", label: "Strong Hire" },
-    hire: { bg: "bg-[#EAF2FF]", text: "text-[#1E40AF]", label: "Hire" },
-    consider: { bg: "bg-[#FEF9C3]", text: "text-[#854D0E]", label: "Consider" },
-    pass: { bg: "bg-[#FEE2E2]", text: "text-[#991B1B]", label: "Pass" },
+    strong_hire: { bg: "bg-[#DCFCE7]", text: "text-[#166534]", label: "Contratar Fuerte" },
+    hire: { bg: "bg-[#EAF2FF]", text: "text-[#1E40AF]", label: "Contratar" },
+    consider: { bg: "bg-[#FEF9C3]", text: "text-[#854D0E]", label: "Considerar" },
+    pass: { bg: "bg-[#FEE2E2]", text: "text-[#991B1B]", label: "Rechazar" },
   };
   const style = styles[recommendation] || styles.consider;
   return (
