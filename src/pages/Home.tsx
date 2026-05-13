@@ -43,7 +43,7 @@ export default function Home() {
             </h1>
 
             <p className="mt-6 text-[17px] text-[#64748B] leading-relaxed max-w-lg">
-              Gastronom Select conecta restaurantes Michelin con talento culinario excepcional a través de evaluaciones impulsadas por IA y una precisa selección de candidatos.
+              Gastronom Select, el nuevo estándar de contratación para hostelería.
             </p>
 
             <div className="mt-10 flex flex-wrap gap-3">
