@@ -1,9 +1,22 @@
 import { z } from "zod";
 import { createRouter, publicQuery } from "./middleware";
 import { signPasswordToken, verifyPasswordToken, getPasswordCookieName } from "./passwordAuth";
-import { setCookie, deleteCookie } from "hono/cookie";
 import { env } from "./lib/env";
 import { TRPCError } from "@trpc/server";
+
+function buildCookieString(
+  name: string,
+  value: string,
+  opts: { httpOnly?: boolean; secure?: boolean; sameSite?: string; maxAge?: number; path?: string }
+): string {
+  let cookie = `${name}=${value}`;
+  if (opts.path) cookie += `; Path=${opts.path}`;
+  if (opts.httpOnly) cookie += "; HttpOnly";
+  if (opts.secure) cookie += "; Secure";
+  if (opts.sameSite) cookie += `; SameSite=${opts.sameSite}`;
+  if (opts.maxAge) cookie += `; Max-Age=${opts.maxAge}`;
+  return cookie;
+}
 
 export const passwordRouter = createRouter({
   login: publicQuery
@@ -18,13 +31,13 @@ export const passwordRouter = createRouter({
       if (input.password !== adminPassword) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Contraseña incorrecta",
+          message: "Contrasena incorrecta",
         });
       }
 
       const token = await signPasswordToken({ admin: true, name: "Admin" });
 
-      setCookie(ctx.resHeaders as any, getPasswordCookieName(), token, {
+      const cookieStr = buildCookieString(getPasswordCookieName(), token, {
         httpOnly: true,
         secure: env.isProduction,
         sameSite: "Lax",
@@ -32,13 +45,22 @@ export const passwordRouter = createRouter({
         path: "/",
       });
 
+      ctx.resHeaders.append("Set-Cookie", cookieStr);
+
       return { success: true };
     }),
 
   logout: publicQuery.mutation(async ({ ctx }) => {
-    deleteCookie(ctx.resHeaders as any, getPasswordCookieName(), {
+    const clearCookie = buildCookieString(getPasswordCookieName(), "", {
+      httpOnly: true,
+      secure: env.isProduction,
+      sameSite: "Lax",
+      maxAge: 0,
       path: "/",
     });
+
+    ctx.resHeaders.append("Set-Cookie", clearCookie);
+
     return { success: true };
   }),
 
