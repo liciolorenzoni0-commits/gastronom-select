@@ -46,10 +46,7 @@ const ROLE_OPTIONS = [
 ];
 
 export default function Dashboard() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth({
-    redirectOnUnauthenticated: true,
-    redirectPath: "/login",
-  });
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const utils = trpc.useUtils();
 

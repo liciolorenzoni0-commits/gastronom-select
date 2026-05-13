@@ -1,58 +1,47 @@
 import { trpc } from "@/providers/trpc";
-import { useCallback, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router";
-import { LOGIN_PATH } from "@/const";
+import { useCallback, useMemo } from "react";
 
-type UseAuthOptions = {
-  redirectOnUnauthenticated?: boolean;
-  redirectPath?: string;
+type AuthUser = {
+  name: string;
+  role: string;
+  unionId: string;
 };
 
-export function useAuth(options?: UseAuthOptions) {
-  const { redirectOnUnauthenticated = false, redirectPath = LOGIN_PATH } =
-    options ?? {};
-
-  const navigate = useNavigate();
-
+export function useAuth() {
   const utils = trpc.useUtils();
 
   const {
-    data: user,
+    data: userData,
     isLoading,
-    error,
-    refetch,
-  } = trpc.auth.me.useQuery(undefined, {
+  } = trpc.password.me.useQuery(undefined, {
     staleTime: 1000 * 60 * 5,
     retry: false,
   });
 
-  const logoutMutation = trpc.auth.logout.useMutation({
+  const logoutMutation = trpc.password.logout.useMutation({
     onSuccess: async () => {
       await utils.invalidate();
-      navigate(redirectPath);
+      window.location.reload();
     },
   });
 
   const logout = useCallback(() => logoutMutation.mutate(), [logoutMutation]);
 
-  useEffect(() => {
-    if (redirectOnUnauthenticated && !isLoading && !user) {
-      const currentPath = window.location.pathname;
-      if (currentPath !== redirectPath) {
-        navigate(redirectPath);
+  const user: AuthUser | null = userData
+    ? {
+        name: userData.name || "Admin",
+        role: userData.role || "admin",
+        unionId: userData.unionId || "admin",
       }
-    }
-  }, [redirectOnUnauthenticated, isLoading, user, navigate, redirectPath]);
+    : null;
 
   return useMemo(
     () => ({
-      user: user ?? null,
+      user,
       isAuthenticated: !!user,
       isLoading: isLoading || logoutMutation.isPending,
-      error,
       logout,
-      refresh: refetch,
     }),
-    [user, isLoading, logoutMutation.isPending, error, logout, refetch],
+    [user, isLoading, logoutMutation.isPending, logout],
   );
 }

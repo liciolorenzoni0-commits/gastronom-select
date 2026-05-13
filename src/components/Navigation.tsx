@@ -4,7 +4,7 @@ import { LogOut, LayoutDashboard, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export default function Navigation() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -68,12 +68,10 @@ export default function Navigation() {
                 <div className="flex items-center gap-3">
                   <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-[#F1F5F9] rounded-full">
                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#2F80ED] to-[#1D4ED8] flex items-center justify-center">
-                      <span className="text-white text-[9px] font-bold">
-                        {(user?.name || "U").charAt(0).toUpperCase()}
-                      </span>
+                      <span className="text-white text-[9px] font-bold">G</span>
                     </div>
                     <span className="text-[12px] font-medium text-[#334155]">
-                      {user?.name || "Admin"}
+                      Admin
                     </span>
                   </div>
                   <button
