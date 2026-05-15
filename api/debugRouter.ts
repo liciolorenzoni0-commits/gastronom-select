@@ -1,93 +1,116 @@
 import { createRouter, publicQuery } from "./middleware";
+import { createConnection } from "mysql2/promise";
+import { env } from "./lib/env";
 import { getDb } from "./queries/connection";
-import { sql } from "drizzle-orm";
+import { jobPostings } from "@db/schema";
 
 export const debugRouter = createRouter({
+  // Check current state of the table
   check: publicQuery.query(async () => {
+    // Use direct connection for SHOW COLUMNS (works fine)
+    const conn = await createConnection(env.databaseUrl);
+    const results: Record<string, string> = {};
+
     try {
-      const db = getDb();
-
-      // Test 1: List columns
-      let columns = "unknown";
+      // 1. Check columns
       try {
-        const rows = await db.execute(sql`SHOW COLUMNS FROM job_postings`);
-        columns = ((rows[0] as unknown) as any[]).map((c: any) => `${c.Field}=${c.Type}`).join(", ");
+        const [cols] = await conn.execute("SHOW COLUMNS FROM job_postings");
+        results.columns = (cols as any[]).map((c) => `${c.Field}=${c.Type}`).join(", ");
       } catch (e: any) {
-        columns = "ERROR: " + e.message;
+        results.columns = "ERROR: " + e.message;
       }
 
-      // Test 2: Count rows
-      let rowCount = -1;
+      // 2. Count rows
       try {
-        const rows = await db.execute(sql`SELECT COUNT(*) as cnt FROM job_postings`);
-        rowCount = ((rows[0] as unknown) as any[])[0].cnt;
+        const [rows] = await conn.execute("SELECT COUNT(*) as cnt FROM job_postings");
+        results.rowCount = String((rows as any[])[0].cnt);
       } catch (e: any) {
-        rowCount = -999;
+        results.rowCount = "ERROR: " + e.message;
       }
 
-      // Test 3: Try INSERT with db.insert (correct way)
-      let ormInsert = "not tested";
+      // 3. Test direct INSERT with mysql2
       try {
-        const { jobPostings } = await import("@db/schema");
-        const result = await db.insert(jobPostings).values({
-          title: "Debug Test",
+        await conn.execute(
+          "INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (?, ?, ?, ?, ?)",
+          ["Direct Test", "chef", "[]", 1, "Direct"]
+        );
+        results.directInsert = "OK";
+        await conn.execute("DELETE FROM job_postings WHERE title = 'Direct Test'");
+      } catch (e: any) {
+        results.directInsert = "FAILED: " + e.message + " (errno=" + e.errno + ")";
+      }
+
+      // 4. Test Drizzle ORM INSERT (uses pool)
+      try {
+        const db = getDb();
+        await db.insert(jobPostings).values({
+          title: "ORM Test",
           role: "chef" as any,
           requiredSkills: "[]",
           requiredYears: 1,
-          description: "Debug",
+          description: "ORM",
         }).$returningId();
-        ormInsert = "SUCCESS id=" + result[0].id;
-        // Clean up
-        await db.execute(sql`DELETE FROM job_postings WHERE title = 'Debug Test'`);
+        results.ormInsert = "OK";
+        await conn.execute("DELETE FROM job_postings WHERE title = 'ORM Test'");
       } catch (e: any) {
-        ormInsert = "FAILED: " + e.message + " (code=" + (e.code || "none") + ")";
+        results.ormInsert = "FAILED: " + e.message + " (errno=" + e.errno + ")";
       }
 
-      return { columns, rowCount, ormInsert };
+      return results;
     } catch (e: any) {
       return { fatal: e.message };
+    } finally {
+      await conn.end();
     }
   }),
 
+  // Fix: recreate table using direct connection (never the Drizzle pool)
   fix: publicQuery.query(async () => {
-    try {
-      const db = getDb();
+    const conn = await createConnection(env.databaseUrl);
+    const results: string[] = [];
 
-      // Drop and recreate
-      await db.execute(sql`DROP TABLE IF EXISTS job_postings`);
-      await db.execute(sql`
+    try {
+      await conn.execute("SET FOREIGN_KEY_CHECKS = 0");
+
+      // Drop corrupted table
+      await conn.execute("DROP TABLE IF EXISTS job_postings");
+      results.push("Dropped");
+
+      // Recreate with TEXT columns and exact names Drizzle expects
+      await conn.execute(`
         CREATE TABLE job_postings (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
           title VARCHAR(255) NOT NULL,
-          role ENUM('chef','sous_chef','manager','waiter','bartender','host') NOT NULL,
-          requiredSkills TEXT,
-          requiredYears INT,
-          description TEXT,
-          isActive TINYINT(1) DEFAULT 1,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-        )
+          \`role\` ENUM('chef','sous_chef','manager','waiter','bartender','host') NOT NULL,
+          \`requiredSkills\` TEXT,
+          \`requiredYears\` INT,
+          \`description\` TEXT,
+          \`isActive\` TINYINT(1) DEFAULT 1,
+          \`createdAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
+      results.push("Created with TEXT");
+
+      // Verify
+      const [cols] = await conn.execute("SHOW COLUMNS FROM job_postings");
+      const colList = (cols as any[]).map((c) => `${c.Field}=${c.Type}`).join(", ");
+      results.push("Columns: " + colList);
 
       // Test insert
-      let testResult = "pending";
-      try {
-        const { jobPostings } = await import("@db/schema");
-        await db.insert(jobPostings).values({
-          title: "Fix Test",
-          role: "chef" as any,
-          requiredSkills: '["test"]',
-          requiredYears: 3,
-          description: "Test",
-        }).$returningId();
-        testResult = "OK";
-        await db.execute(sql`DELETE FROM job_postings WHERE title = 'Fix Test'`);
-      } catch (e: any) {
-        testResult = "FAILED: " + e.message;
-      }
+      await conn.execute(
+        "INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (?, ?, ?, ?, ?)",
+        ["Fix Test", "chef", "[]", 3, "Test"]
+      );
+      results.push("Insert OK");
+      await conn.execute("DELETE FROM job_postings WHERE title = 'Fix Test'");
 
-      return { status: "fixed", testResult };
+      await conn.execute("SET FOREIGN_KEY_CHECKS = 1");
+
+      return { status: "fixed", details: results };
     } catch (e: any) {
-      return { status: "error", message: e.message };
+      return { status: "error", message: e.message, errno: e.errno, details: results };
+    } finally {
+      await conn.end();
     }
   }),
 });
