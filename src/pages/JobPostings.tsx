@@ -14,6 +14,7 @@ import {
   X,
   Upload,
   Check,
+  Zap,
   AlertTriangle,
 } from "lucide-react";
 
@@ -55,8 +56,9 @@ export default function JobPostings() {
 
   const utils = trpc.useUtils();
 
-  const { data: jobs, isLoading: jobsLoading } = trpc.job.list.useQuery();
+  const { data: jobs, isLoading: jobsLoading, error: jobsError } = trpc.job.list.useQuery();
   const { data: candidates } = trpc.candidate.list.useQuery();
+  const { data: migrationResult, refetch: runMigration, isLoading: migrating } = trpc.setup.migrate.useQuery(undefined, { enabled: false });
   const { data: ranking, isLoading: rankingLoading } = trpc.upload.rankCandidates.useQuery(
     { jobPostingId: selectedJobId! },
     { enabled: !!selectedJobId }
@@ -151,6 +153,38 @@ export default function JobPostings() {
           <ArrowLeft className="w-4 h-4" />
           Volver al Panel
         </Link>
+
+        {/* Migration Banner */}
+        {(jobsError || !jobs || (Array.isArray(jobs) && jobs.length === 0 && !jobsLoading)) && (
+          <div className="mb-6 p-4 bg-[#FEF9C3] border border-[#FDE68A] rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-[#854D0E]" />
+              <div>
+                <p className="text-[13px] font-semibold text-[#854D0E]">Base de datos necesita actualizarse</p>
+                <p className="text-[11px] text-[#A16207]">Haz clic en "Actualizar Base de Datos" para crear las tablas necesarias</p>
+              </div>
+            </div>
+            <button
+              onClick={() => runMigration()}
+              disabled={migrating}
+              className="flex items-center gap-2 px-4 py-2 bg-[#854D0E] text-white rounded-xl text-[12px] font-semibold hover:bg-[#A16207] transition-all disabled:opacity-50"
+            >
+              {migrating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+              {migrating ? "Actualizando..." : "Actualizar Base de Datos"}
+            </button>
+          </div>
+        )}
+
+        {migrationResult?.success && (
+          <div className="mb-6 p-4 bg-[#DCFCE7] border border-[#BBF7D0] rounded-xl">
+            <p className="text-[13px] font-semibold text-[#166534]">{migrationResult.message}</p>
+            <ul className="mt-1 space-y-0.5">
+              {migrationResult.details.map((d: string, i: number) => (
+                <li key={i} className="text-[11px] text-[#22C55E]">{d}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center">
