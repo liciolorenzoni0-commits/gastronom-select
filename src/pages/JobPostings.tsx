@@ -47,6 +47,7 @@ export default function JobPostings() {
   const [skillInput, setSkillInput] = useState("");
   const [requiredSkills, setRequiredSkills] = useState<string[]>([]);
   const [description, setDescription] = useState("");
+  const [jobError, setJobError] = useState("");
 
   // CV upload state
   const [uploadingCandidateId, setUploadingCandidateId] = useState<number | null>(null);
@@ -65,7 +66,11 @@ export default function JobPostings() {
     onSuccess: () => {
       utils.job.list.invalidate();
       setShowCreate(false);
+      setJobError("");
       resetForm();
+    },
+    onError: (err) => {
+      setJobError(err.message || "Error al crear el puesto");
     },
   });
 
@@ -100,7 +105,8 @@ export default function JobPostings() {
 
   const handleCreateJob = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    setJobError("");
+    if (!title.trim()) { setJobError("El titulo es obligatorio"); return; }
     createJob.mutate({
       title: title.trim(),
       role: role as "chef" | "sous_chef" | "manager" | "waiter" | "bartender" | "host",
@@ -241,6 +247,11 @@ export default function JobPostings() {
                     rows={3}
                     className="w-full px-3 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] focus:outline-none focus:border-[#2F80ED] resize-none"
                   />
+                  {jobError && (
+                    <div className="p-3 bg-[#FEE2E2] border border-[#FECACA] rounded-xl">
+                      <p className="text-[12px] text-[#991B1B] font-medium">{jobError}</p>
+                    </div>
+                  )}
                   <button
                     type="submit"
                     disabled={createJob.isPending || !title.trim()}
