@@ -179,7 +179,7 @@ export default function JobPostings() {
           <div className="mb-6 p-4 bg-[#DCFCE7] border border-[#BBF7D0] rounded-xl">
             <p className="text-[13px] font-semibold text-[#166534]">{migrationResult.message}</p>
             <ul className="mt-1 space-y-0.5">
-              {migrationResult.details.map((d: string, i: number) => (
+              {(migrationResult as any).details.map((d: string, i: number) => (
                 <li key={i} className="text-[11px] text-[#22C55E]">{d}</li>
               ))}
             </ul>

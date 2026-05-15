@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createRouter, publicQuery } from "./middleware";
 import { listJobs, findJobById, updateJob, deactivateJob } from "./queries/jobs";
 import { getDb } from "./queries/connection";
-import { sql } from "drizzle-orm";
+import { jobPostings } from "@db/schema";
 
 export const jobRouter = createRouter({
   list: publicQuery.query(async () => {
@@ -33,20 +33,20 @@ export const jobRouter = createRouter({
       })
     )
     .mutation(async ({ input }) => {
-      const db = getDb();
-      const skillsJson = JSON.stringify(input.requiredSkills || []);
-      const reqYears = input.requiredYears ?? null;
-      const desc = input.description ?? null;
-
       try {
-        // Use db.execute with sql template tag - works with existing connection
-        await db.execute(
-          sql`INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (${input.title}, ${input.role}, ${skillsJson}, ${reqYears}, ${desc})`
-        );
-        return { success: true };
+        const db = getDb();
+        const result = await db.insert(jobPostings).values({
+          title: input.title,
+          role: input.role,
+          requiredSkills: JSON.stringify(input.requiredSkills || []),
+          requiredYears: input.requiredYears ?? null,
+          description: input.description ?? null,
+        }).$returningId();
+
+        return { success: true, id: result[0].id };
       } catch (err: any) {
-        console.error("[job.create] ERROR:", err.message, "code:", err.code, "sql:", err.sql);
-        throw new Error(`Insert failed: ${err.message} (code: ${err.code || "unknown"})`);
+        console.error("[job.create] FAILED:", err.message, "code:", err.code);
+        throw new Error(`Insert failed: ${err.message}`);
       }
     }),
 

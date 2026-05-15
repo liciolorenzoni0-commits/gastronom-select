@@ -1,112 +1,93 @@
 import { createRouter, publicQuery } from "./middleware";
-import { createConnection } from "mysql2/promise";
-import { env } from "./lib/env";
 import { getDb } from "./queries/connection";
 import { sql } from "drizzle-orm";
 
 export const debugRouter = createRouter({
-  checkDb: publicQuery.query(async () => {
-    const dbUrl = env.databaseUrl;
-    if (!dbUrl) return { error: "DATABASE_URL no configurado" };
-
-    const conn = await createConnection(dbUrl);
-    const results: any = {};
-
+  check: publicQuery.query(async () => {
     try {
-      // 1. Show all columns
-      const [cols] = await conn.execute("SHOW COLUMNS FROM job_postings");
-      results.columns = (cols as any[]).map((c) => ({
-        name: c.Field,
-        type: c.Type,
-        null: c.Null,
-        default: c.Default,
-      }));
+      const db = getDb();
 
-      // 2. Try direct mysql2 insert
+      // Test 1: List columns
+      let columns = "unknown";
       try {
-        const [r] = await conn.execute(
-          "INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (?, ?, ?, ?, ?)",
-          ["Test Direct", "chef", '["Test"]', 3, "Direct insert test"]
-        );
-        results.mysql2Insert = "SUCCESS, id=" + (r as any).insertId;
-        await conn.execute("DELETE FROM job_postings WHERE title = 'Test Direct'");
+        const rows = await db.execute(sql`SHOW COLUMNS FROM job_postings`);
+        columns = ((rows[0] as unknown) as any[]).map((c: any) => `${c.Field}=${c.Type}`).join(", ");
       } catch (e: any) {
-        results.mysql2Insert = `FAILED: ${e.message} (errno:${e.errno}, code:${e.code})`;
+        columns = "ERROR: " + e.message;
       }
 
-      // 3. Try Drizzle sql insert
+      // Test 2: Count rows
+      let rowCount = -1;
       try {
-        const db = getDb();
-        await db.execute(
-          sql`INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (${"Test Drizzle"}, ${"chef"}, ${'["Test"]'}, ${3}, ${"Drizzle test"})`
-        );
-        results.drizzleInsert = "SUCCESS";
-        await conn.execute("DELETE FROM job_postings WHERE title = 'Test Drizzle'");
+        const rows = await db.execute(sql`SELECT COUNT(*) as cnt FROM job_postings`);
+        rowCount = ((rows[0] as unknown) as any[])[0].cnt;
       } catch (e: any) {
-        results.drizzleInsert = `FAILED: ${e.message} (errno:${e.errno}, code:${e.code})`;
+        rowCount = -999;
       }
 
-      // 4. Try Drizzle ORM insert
+      // Test 3: Try INSERT with db.insert (correct way)
+      let ormInsert = "not tested";
       try {
-        const db = getDb();
-        // Import here to avoid circular dependency issues
         const { jobPostings } = await import("@db/schema");
-        const r = await db.insert(jobPostings).values({
-          title: "Test ORM",
+        const result = await db.insert(jobPostings).values({
+          title: "Debug Test",
           role: "chef" as any,
-          requiredSkills: '["Test"]',
-          requiredYears: 3,
-          description: "ORM test",
+          requiredSkills: "[]",
+          requiredYears: 1,
+          description: "Debug",
         }).$returningId();
-        results.ormInsert = "SUCCESS, id=" + r[0].id;
-        await conn.execute("DELETE FROM job_postings WHERE title = 'Test ORM'");
+        ormInsert = "SUCCESS id=" + result[0].id;
+        // Clean up
+        await db.execute(sql`DELETE FROM job_postings WHERE title = 'Debug Test'`);
       } catch (e: any) {
-        results.ormInsert = `FAILED: ${e.message} (errno:${e.errno}, code:${e.code})`;
+        ormInsert = "FAILED: " + e.message + " (code=" + (e.code || "none") + ")";
       }
 
-      return results;
+      return { columns, rowCount, ormInsert };
     } catch (e: any) {
-      return { error: e.message };
-    } finally {
-      await conn.end();
+      return { fatal: e.message };
     }
   }),
 
-  // Full reset - drops and recreates all tables
-  nuclearReset: publicQuery.query(async () => {
-    const dbUrl = env.databaseUrl;
-    if (!dbUrl) return { error: "DATABASE_URL no configurado" };
-
-    const conn = await createConnection(dbUrl);
-    const results: string[] = [];
-
+  fix: publicQuery.query(async () => {
     try {
-      await conn.execute("SET FOREIGN_KEY_CHECKS = 0");
+      const db = getDb();
 
-      await conn.execute("DROP TABLE IF EXISTS job_postings");
-      results.push("job_postings dropped");
-
-      await conn.execute(`
+      // Drop and recreate
+      await db.execute(sql`DROP TABLE IF EXISTS job_postings`);
+      await db.execute(sql`
         CREATE TABLE job_postings (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
           title VARCHAR(255) NOT NULL,
-          \`role\` ENUM('chef','sous_chef','manager','waiter','bartender','host') NOT NULL,
-          \`requiredSkills\` TEXT,
-          \`requiredYears\` INT,
-          \`description\` TEXT,
-          \`isActive\` TINYINT(1) DEFAULT 1,
-          \`createdAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+          role ENUM('chef','sous_chef','manager','waiter','bartender','host') NOT NULL,
+          requiredSkills TEXT,
+          requiredYears INT,
+          description TEXT,
+          isActive TINYINT(1) DEFAULT 1,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )
       `);
-      results.push("job_postings recreated with TEXT");
 
-      await conn.execute("SET FOREIGN_KEY_CHECKS = 1");
+      // Test insert
+      let testResult = "pending";
+      try {
+        const { jobPostings } = await import("@db/schema");
+        await db.insert(jobPostings).values({
+          title: "Fix Test",
+          role: "chef" as any,
+          requiredSkills: '["test"]',
+          requiredYears: 3,
+          description: "Test",
+        }).$returningId();
+        testResult = "OK";
+        await db.execute(sql`DELETE FROM job_postings WHERE title = 'Fix Test'`);
+      } catch (e: any) {
+        testResult = "FAILED: " + e.message;
+      }
 
-      return { success: true, details: results };
+      return { status: "fixed", testResult };
     } catch (e: any) {
-      return { success: false, error: e.message, details: results };
-    } finally {
-      await conn.end();
+      return { status: "error", message: e.message };
     }
   }),
 });
