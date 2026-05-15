@@ -37,6 +37,7 @@ export const jobRouter = createRouter({
       const conn = await createConnection(env.databaseUrl);
       try {
         const skillsJson = JSON.stringify(input.requiredSkills || []);
+        console.log("[job.create] Inserting:", { title: input.title, role: input.role, skills: skillsJson });
         const [result] = await conn.execute(
           `INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (?, ?, ?, ?, ?)`,
           [
@@ -48,7 +49,11 @@ export const jobRouter = createRouter({
           ]
         );
         const insertId = (result as any).insertId;
+        console.log("[job.create] Success, id:", insertId);
         return { id: insertId };
+      } catch (err: any) {
+        console.error("[job.create] FAILED:", err.message, "code:", err.code, "sqlState:", err.sqlState);
+        throw err;
       } finally {
         await conn.end();
       }

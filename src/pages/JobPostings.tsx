@@ -72,7 +72,7 @@ export default function JobPostings() {
       resetForm();
     },
     onError: (err) => {
-      setJobError(err.message || "Error al crear el puesto");
+      setJobError(`Error: ${err.message} (Code: ${err.data?.code || 'unknown'})`);
     },
   });
 
