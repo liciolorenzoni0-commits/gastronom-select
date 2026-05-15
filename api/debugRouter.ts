@@ -2,7 +2,7 @@ import { createRouter, publicQuery } from "./middleware";
 import { createConnection } from "mysql2/promise";
 import { env } from "./lib/env";
 import { getDb } from "./queries/connection";
-import { jobPostings } from "@db/schema";
+import { sql } from "drizzle-orm";
 
 export const debugRouter = createRouter({
   checkDb: publicQuery.query(async () => {
@@ -10,46 +10,58 @@ export const debugRouter = createRouter({
     if (!dbUrl) return { error: "DATABASE_URL no configurado" };
 
     const conn = await createConnection(dbUrl);
-    const results: Record<string, any> = {};
+    const results: any = {};
 
     try {
-      // 1. Check job_postings columns
-      const [jobCols] = await conn.execute("SHOW COLUMNS FROM job_postings");
-      results.jobPostingsColumns = (jobCols as any[]).map((c) => ({
+      // 1. Show all columns
+      const [cols] = await conn.execute("SHOW COLUMNS FROM job_postings");
+      results.columns = (cols as any[]).map((c) => ({
         name: c.Field,
         type: c.Type,
         null: c.Null,
         default: c.Default,
       }));
 
-      // 2. Check candidates columns  
-      const [candCols] = await conn.execute("SHOW COLUMNS FROM candidates");
-      results.candidatesColumns = (candCols as any[]).map((c) => ({
-        name: c.Field,
-        type: c.Type,
-        null: c.Null,
-        default: c.Default,
-      }));
-
-      // 3. Try direct INSERT with mysql2
+      // 2. Try direct mysql2 insert
       try {
-        await conn.execute(
-          `INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (?, ?, ?, ?, ?)`,
-          ["Test Job", "chef", '["Italiana"]', 3, "Test"]
+        const [r] = await conn.execute(
+          "INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (?, ?, ?, ?, ?)",
+          ["Test Direct", "chef", '["Test"]', 3, "Direct insert test"]
         );
-        results.directInsert = "SUCCESS - mysql2 insert works";
-        // Clean up
-        await conn.execute("DELETE FROM job_postings WHERE title = 'Test Job'");
+        results.mysql2Insert = "SUCCESS, id=" + (r as any).insertId;
+        await conn.execute("DELETE FROM job_postings WHERE title = 'Test Direct'");
       } catch (e: any) {
-        results.directInsert = `FAILED: ${e.message} (code: ${e.code})`;
+        results.mysql2Insert = `FAILED: ${e.message} (errno:${e.errno}, code:${e.code})`;
       }
 
-      // 4. Try to list with Drizzle
+      // 3. Try Drizzle sql insert
       try {
-        const jobs = await getDb().select().from(jobPostings).limit(1);
-        results.drizzleSelect = `SUCCESS - found ${jobs.length} jobs`;
+        const db = getDb();
+        await db.execute(
+          sql`INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (${"Test Drizzle"}, ${"chef"}, ${'["Test"]'}, ${3}, ${"Drizzle test"})`
+        );
+        results.drizzleInsert = "SUCCESS";
+        await conn.execute("DELETE FROM job_postings WHERE title = 'Test Drizzle'");
       } catch (e: any) {
-        results.drizzleSelect = `FAILED: ${e.message}`;
+        results.drizzleInsert = `FAILED: ${e.message} (errno:${e.errno}, code:${e.code})`;
+      }
+
+      // 4. Try Drizzle ORM insert
+      try {
+        const db = getDb();
+        // Import here to avoid circular dependency issues
+        const { jobPostings } = await import("@db/schema");
+        const r = await db.insert(jobPostings).values({
+          title: "Test ORM",
+          role: "chef" as any,
+          requiredSkills: '["Test"]',
+          requiredYears: 3,
+          description: "ORM test",
+        }).$returningId();
+        results.ormInsert = "SUCCESS, id=" + r[0].id;
+        await conn.execute("DELETE FROM job_postings WHERE title = 'Test ORM'");
+      } catch (e: any) {
+        results.ormInsert = `FAILED: ${e.message} (errno:${e.errno}, code:${e.code})`;
       }
 
       return results;
@@ -60,7 +72,7 @@ export const debugRouter = createRouter({
     }
   }),
 
-  // Nuclear option: drop everything and recreate
+  // Full reset - drops and recreates all tables
   nuclearReset: publicQuery.query(async () => {
     const dbUrl = env.databaseUrl;
     if (!dbUrl) return { error: "DATABASE_URL no configurado" };
@@ -71,105 +83,28 @@ export const debugRouter = createRouter({
     try {
       await conn.execute("SET FOREIGN_KEY_CHECKS = 0");
 
-      // Drop tables in correct order
       await conn.execute("DROP TABLE IF EXISTS job_postings");
       results.push("job_postings dropped");
 
-      await conn.execute("DROP TABLE IF EXISTS ai_summaries");
-      results.push("ai_summaries dropped");
-
-      await conn.execute("DROP TABLE IF EXISTS evaluations");
-      results.push("evaluations dropped");
-
-      await conn.execute("DROP TABLE IF EXISTS candidates");
-      results.push("candidates dropped");
-
-      // Recreate candidates
-      await conn.execute(`
-        CREATE TABLE candidates (
-          id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-          token VARCHAR(100) NOT NULL,
-          fullName VARCHAR(255) NOT NULL,
-          email VARCHAR(255),
-          phone VARCHAR(50),
-          role ENUM('chef','sous_chef','manager','waiter','bartender','host') NOT NULL,
-          experienceYears INT,
-          tags TEXT,
-          cvUrl TEXT,
-          cvText TEXT,
-          matchScore INT,
-          avatarUrl TEXT,
-          status ENUM('active','hired','rejected','archived') DEFAULT 'active' NOT NULL,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          UNIQUE KEY token_idx (token)
-        )
-      `);
-      results.push("candidates recreated");
-
-      // Recreate evaluations
-      await conn.execute(`
-        CREATE TABLE evaluations (
-          id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-          candidateId INT UNSIGNED NOT NULL,
-          interviewerEmail VARCHAR(255),
-          restaurantName VARCHAR(255),
-          clientToken VARCHAR(100),
-          scores TEXT,
-          generalNotes TEXT,
-          recommendation ENUM('strong_hire','hire','consider','pass'),
-          audioUrl TEXT,
-          aiSummaryId INT UNSIGNED,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-        )
-      `);
-      results.push("evaluations recreated");
-
-      // Recreate ai_summaries
-      await conn.execute(`
-        CREATE TABLE ai_summaries (
-          id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-          evaluationId INT UNSIGNED NOT NULL,
-          executiveSummary TEXT,
-          recommendationScore VARCHAR(10),
-          strengths TEXT,
-          concerns TEXT,
-          culturalFit ENUM('excellent','good','moderate','poor'),
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-        )
-      `);
-      results.push("ai_summaries recreated");
-
-      // Recreate job_postings
       await conn.execute(`
         CREATE TABLE job_postings (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
           title VARCHAR(255) NOT NULL,
-          role ENUM('chef','sous_chef','manager','waiter','bartender','host') NOT NULL,
-          requiredSkills TEXT,
-          requiredYears INT,
-          description TEXT,
-          isActive TINYINT(1) DEFAULT 1,
-          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-        )
+          \`role\` ENUM('chef','sous_chef','manager','waiter','bartender','host') NOT NULL,
+          \`requiredSkills\` TEXT,
+          \`requiredYears\` INT,
+          \`description\` TEXT,
+          \`isActive\` TINYINT(1) DEFAULT 1,
+          \`createdAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
-      results.push("job_postings recreated");
+      results.push("job_postings recreated with TEXT");
 
       await conn.execute("SET FOREIGN_KEY_CHECKS = 1");
 
-      return {
-        success: true,
-        message: "Todas las tablas recreadas desde cero",
-        details: results,
-      };
+      return { success: true, details: results };
     } catch (e: any) {
-      return {
-        success: false,
-        error: e.message,
-        code: e.code,
-        details: results,
-      };
+      return { success: false, error: e.message, details: results };
     } finally {
       await conn.end();
     }

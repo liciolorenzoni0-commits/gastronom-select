@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createRouter, publicQuery } from "./middleware";
 import { listJobs, findJobById, updateJob, deactivateJob } from "./queries/jobs";
 import { getDb } from "./queries/connection";
-import { jobPostings } from "@db/schema";
+import { sql } from "drizzle-orm";
 
 export const jobRouter = createRouter({
   list: publicQuery.query(async () => {
@@ -38,16 +38,16 @@ export const jobRouter = createRouter({
       const reqYears = input.requiredYears ?? null;
       const desc = input.description ?? null;
 
-      // Use Drizzle insert which handles the connection properly
-      const result = await db.insert(jobPostings).values({
-        title: input.title,
-        role: input.role as any,
-        requiredSkills: skillsJson,
-        requiredYears: reqYears,
-        description: desc,
-      }).$returningId();
-
-      return { id: result[0].id };
+      try {
+        // Use db.execute with sql template tag - works with existing connection
+        await db.execute(
+          sql`INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (${input.title}, ${input.role}, ${skillsJson}, ${reqYears}, ${desc})`
+        );
+        return { success: true };
+      } catch (err: any) {
+        console.error("[job.create] ERROR:", err.message, "code:", err.code, "sql:", err.sql);
+        throw new Error(`Insert failed: ${err.message} (code: ${err.code || "unknown"})`);
+      }
     }),
 
   update: publicQuery
