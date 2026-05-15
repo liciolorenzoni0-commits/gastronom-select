@@ -5,9 +5,11 @@ import * as relations from "@db/relations";
 
 const fullSchema = { ...schema, ...relations };
 
-let instance: ReturnType<typeof drizzle<typeof fullSchema>>;
+type DrizzleInstance = ReturnType<typeof drizzle<typeof fullSchema>>;
 
-export function getDb() {
+let instance: DrizzleInstance | null = null;
+
+export function getDb(): DrizzleInstance {
   if (!instance) {
     instance = drizzle(env.databaseUrl, {
       mode: "planetscale",
@@ -15,4 +17,10 @@ export function getDb() {
     });
   }
   return instance;
+}
+
+// Call this after DDL operations to force a new pool on next getDb()
+export function resetDb() {
+  console.log("[connection] Resetting Drizzle pool");
+  instance = null;
 }

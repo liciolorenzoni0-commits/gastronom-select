@@ -8,6 +8,7 @@ import { env } from "./lib/env";
 import { createOAuthCallbackHandler } from "./kimi/auth";
 import { Paths } from "@contracts/constants";
 import mysql from "mysql2/promise";
+import { resetDb } from "./queries/connection";
 
 // ---- Startup migration: verify/fix job_postings table ----
 // This runs ONCE at server startup with a fresh direct connection
@@ -24,43 +25,50 @@ async function startupMigration() {
     connection = await mysql.createConnection(env.databaseUrl);
 
     // Check if job_postings exists and has correct columns
+    let needsRecreate = false;
     try {
       const [cols] = await connection.execute("SHOW COLUMNS FROM job_postings");
       const columns = (cols as any[]).map((c) => ({ name: c.Field, type: c.Type }));
       console.log("[startup] job_postings columns:", JSON.stringify(columns));
 
-      // Check if requiredSkills is TEXT (not JSON)
       const skillsCol = columns.find((c) => c.name === "requiredSkills");
       if (skillsCol && skillsCol.type.toLowerCase().includes("json")) {
-        console.log("[startup] requiredSkills is JSON, recreating table...");
-        throw new Error("recreate"); // trigger recreation below
+        console.log("[startup] requiredSkills is JSON, needs recreate");
+        needsRecreate = true;
+      } else {
+        console.log("[startup] Table OK");
       }
-
-      console.log("[startup] Table OK");
     } catch (e: any) {
-      if (e.message === "recreate" || e.message.includes("doesn't exist")) {
-        console.log("[startup] Recreating job_postings...");
-        await connection.execute("SET FOREIGN_KEY_CHECKS = 0");
-        await connection.execute("DROP TABLE IF EXISTS job_postings");
-        await connection.execute(`
-          CREATE TABLE job_postings (
-            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            \`role\` ENUM('chef','sous_chef','manager','waiter','bartender','host') NOT NULL,
-            \`requiredSkills\` TEXT DEFAULT '[]',
-            \`requiredYears\` INT,
-            \`description\` TEXT,
-            \`isActive\` TINYINT(1) DEFAULT 1,
-            \`createdAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        `);
-        await connection.execute("SET FOREIGN_KEY_CHECKS = 1");
-        console.log("[startup] job_postings recreated successfully");
+      if (e.message && e.message.includes("doesn't exist")) {
+        console.log("[startup] Table missing, needs create");
+        needsRecreate = true;
       } else {
         console.log("[startup] SHOW COLUMNS error:", e.message);
+        needsRecreate = true;
       }
     }
 
+    if (needsRecreate) {
+      console.log("[startup] Recreating job_postings...");
+      await connection.execute("SET FOREIGN_KEY_CHECKS = 0");
+      await connection.execute("DROP TABLE IF EXISTS job_postings");
+      await connection.execute(`
+        CREATE TABLE job_postings (
+          id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          \`role\` ENUM('chef','sous_chef','manager','waiter','bartender','host') NOT NULL,
+          \`requiredSkills\` TEXT DEFAULT '[]',
+          \`requiredYears\` INT,
+          \`description\` TEXT,
+          \`isActive\` TINYINT(1) DEFAULT 1,
+          \`createdAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+      await connection.execute("SET FOREIGN_KEY_CHECKS = 1");
+      console.log("[startup] job_postings recreated");
+    }
+
+    resetDb(); // Always reset pool after DDL
     await connection.end();
   } catch (e: any) {
     console.error("[startup] Migration error:", e.message);
