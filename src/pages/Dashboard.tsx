@@ -59,8 +59,10 @@ export default function Dashboard() {
   const [expYears, setExpYears] = useState(5);
   const [skillInput, setSkillInput] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
+  const [restaurantName, setRestaurantName] = useState("");
   const [createError, setCreateError] = useState("");
   const [createdToken, setCreatedToken] = useState("");
+  const [createdClientToken, setCreatedClientToken] = useState("");
 
   useEffect(() => {
     if (!authLoading && isAuthenticated && user?.role !== "admin") {
@@ -87,20 +89,16 @@ export default function Dashboard() {
     undefined, { enabled: isAuthenticated && user?.role === "admin" }
   );
 
-  const createCandidate = trpc.candidate.create.useMutation({
-    onSuccess: () => {
-      utils.candidate.list.invalidate();
-      utils.dashboard.overview.invalidate();
-      utils.dashboard.roleDistribution.invalidate();
-      setCreatedToken(generateToken(fullName));
-      setFullName(""); setEmail(""); setPhone(""); setSkills([]); setSkillInput("");
-    },
-    onError: (err) => setCreateError(err.message),
-  });
+  const createCandidate = trpc.candidate.create.useMutation();
+  const createEvaluation = trpc.evaluation.create.useMutation();
 
   const generateToken = (name: string) => {
     const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     return `${role}-${slug}-${Date.now().toString(36).slice(-4)}`;
+  };
+
+  const clientTokenFromRestaurant = (name: string) => {
+    return name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 50);
   };
 
   const handleCreate = (e: React.FormEvent) => {
@@ -108,18 +106,50 @@ export default function Dashboard() {
     setCreateError("");
     if (!fullName.trim()) { setCreateError("El nombre es obligatorio"); return; }
     const token = generateToken(fullName);
-    createCandidate.mutate({
-      token, fullName: fullName.trim(), email: email.trim() || undefined,
-      phone: phone.trim() || undefined,
-      role: role as "chef" | "sous_chef" | "manager" | "waiter" | "bartender" | "host",
-      experienceYears: expYears, tags: skills.length > 0 ? skills : undefined,
-    });
+    const clientToken = restaurantName.trim() ? clientTokenFromRestaurant(restaurantName) : "";
+
+    createCandidate.mutate(
+      {
+        token, fullName: fullName.trim(), email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+        role: role as "chef" | "sous_chef" | "manager" | "waiter" | "bartender" | "host",
+        experienceYears: expYears, tags: skills.length > 0 ? skills : undefined,
+      },
+      {
+        onSuccess: (data) => {
+          utils.candidate.list.invalidate();
+          utils.dashboard.overview.invalidate();
+          utils.dashboard.roleDistribution.invalidate();
+
+          // Auto-create evaluation with restaurant if provided
+          if (restaurantName.trim() && data.id) {
+            createEvaluation.mutate(
+              {
+                candidateId: data.id,
+                restaurantName: restaurantName.trim(),
+              },
+              {
+                onSuccess: () => {
+                  utils.dashboard.overview.invalidate();
+                },
+              }
+            );
+          }
+
+          setCreatedToken(token);
+          setCreatedClientToken(clientToken);
+          setFullName(""); setEmail(""); setPhone(""); setSkills([]); setSkillInput(""); setRestaurantName("");
+        },
+        onError: (err) => setCreateError(err.message),
+      }
+    );
   };
 
   const addSkill = () => { const s = skillInput.trim(); if (s && !skills.includes(s)) { setSkills([...skills, s]); setSkillInput(""); } };
   const removeSkill = (s: string) => setSkills(skills.filter((x) => x !== s));
   const copyToClipboard = (text: string) => { navigator.clipboard.writeText(text); setCopiedToken(text); setTimeout(() => setCopiedToken(null), 2000); };
   const evaluationUrl = (token: string) => { const origin = typeof window !== "undefined" ? window.location.origin : ""; return `${origin}/#/candidate/${token}`; };
+  const clientPortalUrl = (token: string) => { const origin = typeof window !== "undefined" ? window.location.origin : ""; return `${origin}/#/client/${token}`; };
 
   if (authLoading || isLoading) {
     return <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center"><Loader2 className="w-6 h-6 text-[#2F80ED] animate-spin" /></div>;
@@ -159,16 +189,33 @@ export default function Dashboard() {
               <div className="text-center py-6">
                 <div className="w-14 h-14 rounded-2xl bg-[#DCFCE7] flex items-center justify-center mx-auto mb-4"><Check className="w-6 h-6 text-[#22C55E]" /></div>
                 <h3 className="text-[18px] font-semibold text-[#0F172A] mb-1">Candidato Creado</h3>
-                <p className="text-[13px] text-[#64748B] mb-4">Comparte este enlace de evaluación con tu cliente</p>
-                <div className="max-w-lg mx-auto">
-                  <div className="flex items-center gap-2 p-4 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
-                    <Link2 className="w-4 h-4 text-[#94A3B8] flex-shrink-0" />
-                    <code className="flex-1 text-[12px] text-[#0F172A] font-mono truncate">{evaluationUrl(createdToken)}</code>
-                    <button onClick={() => copyToClipboard(evaluationUrl(createdToken))} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2F80ED] text-white rounded-lg text-[11px] font-semibold flex-shrink-0">
-                      {copiedToken === evaluationUrl(createdToken) ? <><Check className="w-3 h-3" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
-                    </button>
+                <p className="text-[13px] text-[#64748B] mb-4">Comparte estos enlaces con tu cliente</p>
+                <div className="max-w-lg mx-auto space-y-3">
+                  {/* Evaluation Link */}
+                  <div>
+                    <p className="text-[11px] font-medium text-[#94A3B8] uppercase tracking-wider mb-1.5 text-left">Enlace de Evaluacion</p>
+                    <div className="flex items-center gap-2 p-4 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
+                      <Link2 className="w-4 h-4 text-[#94A3B8] flex-shrink-0" />
+                      <code className="flex-1 text-[12px] text-[#0F172A] font-mono truncate">{evaluationUrl(createdToken)}</code>
+                      <button onClick={() => copyToClipboard(evaluationUrl(createdToken))} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2F80ED] text-white rounded-lg text-[11px] font-semibold flex-shrink-0">
+                        {copiedToken === evaluationUrl(createdToken) ? <><Check className="w-3 h-3" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => { setCreatedToken(""); setShowCreate(false); }} className="mt-4 text-[13px] font-medium text-[#2F80ED] hover:underline">Crear otro candidato</button>
+                  {/* Client Portal Link */}
+                  {createdClientToken && (
+                    <div>
+                      <p className="text-[11px] font-medium text-[#94A3B8] uppercase tracking-wider mb-1.5 text-left">Portal del Cliente <span className="normal-case text-[#C8A96B]">(todos sus candidatos)</span></p>
+                      <div className="flex items-center gap-2 p-4 bg-[#EAF2FF] rounded-xl border border-[#BFDBFE]">
+                        <Link2 className="w-4 h-4 text-[#2F80ED] flex-shrink-0" />
+                        <code className="flex-1 text-[12px] text-[#0F172A] font-mono truncate">{clientPortalUrl(createdClientToken)}</code>
+                        <button onClick={() => copyToClipboard(clientPortalUrl(createdClientToken))} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C8A96B] text-white rounded-lg text-[11px] font-semibold flex-shrink-0">
+                          {copiedToken === clientPortalUrl(createdClientToken) ? <><Check className="w-3 h-3" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <button onClick={() => { setCreatedToken(""); setCreatedClientToken(""); setShowCreate(false); }} className="mt-4 text-[13px] font-medium text-[#2F80ED] hover:underline">Crear otro candidato</button>
                 </div>
               </div>
             ) : (
@@ -177,6 +224,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div><label className="block text-[12px] font-semibold text-[#475569] mb-1.5">Nombre Completo *</label><input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="ej. María González" className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED]" /></div>
                   <div><label className="block text-[12px] font-semibold text-[#475569] mb-1.5">Rol *</label><select value={role} onChange={(e) => setRole(e.target.value)} className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED]">{ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></div>
+                  <div className="md:col-span-2"><label className="block text-[12px] font-semibold text-[#475569] mb-1.5">Restaurante Cliente * <span className="text-[#94A3B8] font-normal">(genera el portal del cliente)</span></label><input type="text" value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} placeholder="ej. El Celler de Can Roca" className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED]" /></div>
                   <div><label className="block text-[12px] font-semibold text-[#475569] mb-1.5">Email</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="maria@email.com" className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED]" /></div>
                   <div><label className="block text-[12px] font-semibold text-[#475569] mb-1.5">Teléfono</label><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+34 612 345 678" className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED]" /></div>
                   <div><label className="block text-[12px] font-semibold text-[#475569] mb-1.5">Experiencia (años)</label><input type="number" min={0} max={50} value={expYears} onChange={(e) => setExpYears(parseInt(e.target.value) || 0)} className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED]" /></div>

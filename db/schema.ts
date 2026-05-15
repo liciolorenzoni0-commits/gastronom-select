@@ -48,6 +48,8 @@ export const candidates = mysqlTable("candidates", {
   experienceYears: int("experienceYears"),
   tags: json("tags").$type<string[]>(),
   cvUrl: text("cvUrl"),
+  cvText: text("cvText"),
+  matchScore: int("matchScore"),
   avatarUrl: text("avatarUrl"),
   status: mysqlEnum("status", ["active", "hired", "rejected", "archived"])
     .default("active")
@@ -58,6 +60,28 @@ export const candidates = mysqlTable("candidates", {
 
 export type Candidate = typeof candidates.$inferSelect;
 export type InsertCandidate = typeof candidates.$inferInsert;
+
+// Job postings — position requirements for CV matching
+export const jobPostings = mysqlTable("job_postings", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  role: mysqlEnum("role", [
+    "chef",
+    "sous_chef",
+    "manager",
+    "waiter",
+    "bartender",
+    "host",
+  ]).notNull(),
+  requiredSkills: json("requiredSkills").$type<string[]>(),
+  requiredYears: int("requiredYears"),
+  description: text("description"),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type JobPosting = typeof jobPostings.$inferSelect;
+export type InsertJobPosting = typeof jobPostings.$inferInsert;
 
 // Evaluations table — interview evaluation records
 export const evaluations = mysqlTable("evaluations", {

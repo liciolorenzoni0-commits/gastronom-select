@@ -7,6 +7,8 @@ import { voiceRouter } from "./voiceRouter";
 import { dashboardRouter } from "./dashboardRouter";
 import { portalRouter } from "./clientRouter";
 import { passwordRouter } from "./passwordRouter";
+import { uploadRouter } from "./uploadRouter";
+import { jobRouter } from "./jobRouter";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -20,6 +22,8 @@ export const appRouter = createRouter({
   voice: voiceRouter,
   dashboard: dashboardRouter,
   portal: portalRouter,
+  upload: uploadRouter,
+  job: jobRouter,
 });
 
 export type AppRouter = typeof appRouter;

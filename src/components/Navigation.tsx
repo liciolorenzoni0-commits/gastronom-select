@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, LayoutDashboard, Menu, X } from "lucide-react";
+import { LogOut, LayoutDashboard, Briefcase, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export default function Navigation() {
@@ -50,15 +50,26 @@ export default function Navigation() {
                 Feedback
               </Link>
               {isAuthenticated && (
-                <Link
-                  to="/dashboard"
-                  className={navLinkClass("/dashboard")}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <LayoutDashboard className="w-3.5 h-3.5" />
-                    Panel
-                  </span>
-                </Link>
+                <>
+                  <Link
+                    to="/dashboard"
+                    className={navLinkClass("/dashboard")}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <LayoutDashboard className="w-3.5 h-3.5" />
+                      Panel
+                    </span>
+                  </Link>
+                  <Link
+                    to="/jobs"
+                    className={navLinkClass("/jobs")}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Briefcase className="w-3.5 h-3.5" />
+                      Puestos
+                    </span>
+                  </Link>
+                </>
               )}
             </div>
 
@@ -107,7 +118,10 @@ export default function Navigation() {
               <Link to="/evaluate" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Evaluar</Link>
               <Link to="/feedback" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Feedback</Link>
               {isAuthenticated && (
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Panel</Link>
+                <>
+                  <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Panel</Link>
+                  <Link to="/jobs" onClick={() => setMobileOpen(false)} className="block text-[13px] font-medium text-[#64748B]">Puestos</Link>
+                </>
               )}
             </div>
           )}
