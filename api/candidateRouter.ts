@@ -64,7 +64,7 @@ export const candidateRouter = createRouter({
     .mutation(async ({ input }) => {
       const id = await createCandidate({
         ...input,
-        tags: input.tags ? JSON.stringify(input.tags) : null,
+        tags: input.tags && input.tags.length > 0 ? JSON.stringify(input.tags) : "[]",
         status: "active",
       });
       return { id };

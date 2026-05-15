@@ -3,7 +3,7 @@ import * as schema from "@db/schema";
 import { getDb } from "./connection";
 
 function parseJsonField<T>(value: string | null): T | null {
-  if (!value) return null;
+  if (!value || value === "null") return null;
   try {
     return JSON.parse(value) as T;
   } catch {
@@ -11,8 +11,8 @@ function parseJsonField<T>(value: string | null): T | null {
   }
 }
 
-function serializeSkills(skills: string[] | null | undefined): string | null {
-  if (!skills || skills.length === 0) return null;
+function serializeSkills(skills: string[] | null | undefined): string {
+  if (!skills || skills.length === 0) return "[]";
   return JSON.stringify(skills);
 }
 
