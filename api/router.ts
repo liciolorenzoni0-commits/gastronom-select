@@ -10,6 +10,7 @@ import { passwordRouter } from "./passwordRouter";
 import { uploadRouter } from "./uploadRouter";
 import { jobRouter } from "./jobRouter";
 import { setupRouter } from "./setupRouter";
+import { debugRouter } from "./debugRouter";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -26,6 +27,7 @@ export const appRouter = createRouter({
   upload: uploadRouter,
   job: jobRouter,
   setup: setupRouter,
+  debug: debugRouter,
 });
 
 export type AppRouter = typeof appRouter;

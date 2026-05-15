@@ -1,76 +1,72 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "./middleware";
-import {
-  findCandidateByToken,
-  findCandidateById,
-  listCandidates,
-  createCandidate,
-  updateCandidateStatus,
-} from "./queries/candidates";
-import { listEvaluationsByCandidate } from "./queries/evaluations";
-import { findAiSummaryByEvaluation } from "./queries/aiSummaries";
+import { createRouter, publicQuery } from "./middleware";
+import { findCandidateByToken, findCandidateById, listCandidates, updateCandidateStatus } from "./queries/candidates";
+import { createConnection } from "mysql2/promise";
+import { env } from "./lib/env";
 
 export const candidateRouter = createRouter({
   getByToken: publicQuery
     .input(z.object({ token: z.string() }))
     .query(async ({ input }) => {
-      const candidate = await findCandidateByToken(input.token);
-      if (!candidate) return null;
-
-      // Fetch evaluations and their AI summaries
-      const evaluations = await listEvaluationsByCandidate(candidate.id);
-      const evaluationsWithSummaries = await Promise.all(
-        evaluations.map(async (ev) => {
-          const scores = await import("./queries/evaluations").then((m) =>
-            m.listScoresByEvaluation(ev.id)
-          );
-          const aiSummary = ev.aiSummaryId
-            ? await findAiSummaryByEvaluation(ev.id)
-            : null;
-          return { ...ev, scores, aiSummary };
-        })
-      );
-
-      return { ...candidate, evaluations: evaluationsWithSummaries };
+      return findCandidateByToken(input.token);
     }),
 
   getById: publicQuery
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
-      const candidate = await findCandidateById(input.id);
-      if (!candidate) return null;
-      const evaluations = await listEvaluationsByCandidate(candidate.id);
-      return { ...candidate, evaluations };
+      return findCandidateById(input.id);
     }),
 
-  list: adminQuery.query(async () => {
+  list: publicQuery.query(async () => {
     return listCandidates();
   }),
 
-  create: adminQuery
+  create: publicQuery
     .input(
       z.object({
         token: z.string().min(1),
         fullName: z.string().min(1),
-        email: z.string().email().optional(),
+        email: z.string().optional(),
         phone: z.string().optional(),
-        role: z.enum(["chef", "sous_chef", "manager", "waiter", "bartender", "host"]),
+        role: z.enum([
+          "chef",
+          "sous_chef",
+          "manager",
+          "waiter",
+          "bartender",
+          "host",
+        ]),
         experienceYears: z.number().optional(),
         tags: z.array(z.string()).optional(),
-        cvUrl: z.string().optional(),
         avatarUrl: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
-      const id = await createCandidate({
-        ...input,
-        tags: input.tags && input.tags.length > 0 ? JSON.stringify(input.tags) : "[]",
-        status: "active",
-      });
-      return { id };
+      // Use raw SQL to avoid Drizzle column name issues
+      const conn = await createConnection(env.databaseUrl);
+      try {
+        const tagsJson = input.tags && input.tags.length > 0 ? JSON.stringify(input.tags) : "[]";
+        const [result] = await conn.execute(
+          `INSERT INTO candidates (token, fullName, email, phone, role, experienceYears, tags, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            input.token,
+            input.fullName,
+            input.email || null,
+            input.phone || null,
+            input.role,
+            input.experienceYears ?? null,
+            tagsJson,
+            "active",
+          ]
+        );
+        const insertId = (result as any).insertId;
+        return { id: insertId, token: input.token };
+      } finally {
+        await conn.end();
+      }
     }),
 
-  updateStatus: adminQuery
+  updateStatus: publicQuery
     .input(
       z.object({
         id: z.number(),

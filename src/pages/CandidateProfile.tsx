@@ -24,6 +24,11 @@ export default function CandidateProfile() {
     { enabled: !!token, retry: false }
   );
 
+  const { data: evaluations } = trpc.evaluation.getByCandidate.useQuery(
+    { candidateId: candidate?.id || 0 },
+    { enabled: !!candidate?.id }
+  );
+
   const startNewEvaluation = trpc.evaluation.create.useMutation({
     onSuccess: (data) => {
       navigate(`/evaluation/${data.id}`);
@@ -71,9 +76,8 @@ export default function CandidateProfile() {
   };
 
   const tags = (candidate.tags as string[]) || [];
-  const evaluations = candidate.evaluations || [];
-  const latestEval = evaluations[0];
-  const latestAiSummary = latestEval?.aiSummary as { executiveSummary?: string; recommendationScore?: string; culturalFit?: string } | null;
+  const evalsList = evaluations || [];
+  const latestEval = evalsList[0];
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pt-24 pb-16 px-6">
@@ -187,7 +191,7 @@ export default function CandidateProfile() {
                 <FileText className="w-4 h-4 text-[#2F80ED]" />
                 Historial de Evaluaciones
               </h3>
-              {evaluations.length === 0 ? (
+              {evalsList.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="w-12 h-12 rounded-xl bg-[#F1F5F9] flex items-center justify-center mx-auto mb-3">
                     <FileText className="w-5 h-5 text-[#CBD5E1]" />
@@ -198,7 +202,7 @@ export default function CandidateProfile() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {evaluations.map((ev) => (
+                  {evalsList.map((ev: any) => (
                     <Link
                       key={ev.id}
                       to={`/evaluation/${ev.id}/summary`}
@@ -243,11 +247,11 @@ export default function CandidateProfile() {
                   </span>
                   <span className="text-[16px] text-[#64748B]">/10</span>
                 </div>
-                {latestAiSummary?.culturalFit && (
+                {latestEval?.recommendation && (
                   <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10">
                     <Shield className="w-3 h-3 text-[#22C55E]" />
                     <span className="text-[11px] font-medium text-[#22C55E] capitalize">
-                      Ajuste {latestAiSummary.culturalFit}
+                      Ajuste Cultural
                     </span>
                   </div>
                 )}
@@ -255,14 +259,14 @@ export default function CandidateProfile() {
             )}
 
             {/* AI Summary Preview */}
-            {latestAiSummary?.executiveSummary && (
+            {latestEval?.aiSummaryId && (
               <div className="bg-white rounded-2xl border border-[#E2E8F0]/60 shadow-card p-6">
                 <h3 className="flex items-center gap-2 text-[14px] font-semibold text-[#0F172A] mb-3">
                   <Award className="w-4 h-4 text-[#C8A96B]" />
                   Resumen con IA
                 </h3>
                 <p className="text-[13px] text-[#64748B] leading-relaxed line-clamp-4">
-                  {latestAiSummary.executiveSummary}
+                  Resumen generado automaticamente basado en la evaluacion.
                 </p>
                 <Link
                   to={`/evaluation/${latestEval!.id}/summary`}

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { createRouter, publicQuery } from "./middleware";
-import { listJobs, findJobById, createJob, updateJob, deactivateJob } from "./queries/jobs";
+import { listJobs, findJobById, updateJob, deactivateJob } from "./queries/jobs";
+import { createConnection } from "mysql2/promise";
+import { env } from "./lib/env";
 
 export const jobRouter = createRouter({
   list: publicQuery.query(async () => {
@@ -31,14 +33,25 @@ export const jobRouter = createRouter({
       })
     )
     .mutation(async ({ input }) => {
-      const id = await createJob({
-        title: input.title,
-        role: input.role,
-        requiredSkills: input.requiredSkills || [],
-        requiredYears: input.requiredYears || null,
-        description: input.description || null,
-      });
-      return { id };
+      // Use raw SQL to avoid Drizzle column name issues
+      const conn = await createConnection(env.databaseUrl);
+      try {
+        const skillsJson = JSON.stringify(input.requiredSkills || []);
+        const [result] = await conn.execute(
+          `INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (?, ?, ?, ?, ?)`,
+          [
+            input.title,
+            input.role,
+            skillsJson,
+            input.requiredYears ?? null,
+            input.description ?? null,
+          ]
+        );
+        const insertId = (result as any).insertId;
+        return { id: insertId };
+      } finally {
+        await conn.end();
+      }
     }),
 
   update: publicQuery
