@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createRouter, publicQuery } from "./middleware";
 import { listJobs, findJobById, updateJob, deactivateJob } from "./queries/jobs";
 import { getDb } from "./queries/connection";
-import { sql } from "drizzle-orm";
+import { jobPostings } from "@db/schema";
 
 export const jobRouter = createRouter({
   list: publicQuery.query(async () => {
@@ -33,23 +33,21 @@ export const jobRouter = createRouter({
       })
     )
     .mutation(async ({ input }) => {
-      try {
-        const skillsJson = JSON.stringify(input.requiredSkills || []);
-        const reqYears = input.requiredYears ?? null;
-        const desc = input.description ?? null;
+      const db = getDb();
+      const skillsJson = JSON.stringify(input.requiredSkills || []);
+      const reqYears = input.requiredYears ?? null;
+      const desc = input.description ?? null;
 
-        // Use existing DB connection with raw SQL
-        const db = getDb();
-        const result = await db.execute(
-          sql`INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (${input.title}, ${input.role}, ${skillsJson}, ${reqYears}, ${desc})`
-        );
+      // Use Drizzle insert which handles the connection properly
+      const result = await db.insert(jobPostings).values({
+        title: input.title,
+        role: input.role as any,
+        requiredSkills: skillsJson,
+        requiredYears: reqYears,
+        description: desc,
+      }).$returningId();
 
-        return { id: (result as any)[0].insertId };
-      } catch (err: any) {
-        console.error("[job.create] FAILED:", err.message, "code:", err.code);
-        // Return the error so client can see it
-        throw new Error(`DB Error: ${err.message} (code: ${err.code || "unknown"})`);
-      }
+      return { id: result[0].id };
     }),
 
   update: publicQuery
