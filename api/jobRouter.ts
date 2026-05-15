@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createRouter, publicQuery } from "./middleware";
 import { listJobs, findJobById, updateJob, deactivateJob } from "./queries/jobs";
-import { createConnection } from "mysql2/promise";
-import { env } from "./lib/env";
+import { getDb } from "./queries/connection";
+import { sql } from "drizzle-orm";
 
 export const jobRouter = createRouter({
   list: publicQuery.query(async () => {
@@ -33,29 +33,22 @@ export const jobRouter = createRouter({
       })
     )
     .mutation(async ({ input }) => {
-      // Use raw SQL to avoid Drizzle column name issues
-      const conn = await createConnection(env.databaseUrl);
       try {
         const skillsJson = JSON.stringify(input.requiredSkills || []);
-        console.log("[job.create] Inserting:", { title: input.title, role: input.role, skills: skillsJson });
-        const [result] = await conn.execute(
-          `INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (?, ?, ?, ?, ?)`,
-          [
-            input.title,
-            input.role,
-            skillsJson,
-            input.requiredYears ?? null,
-            input.description ?? null,
-          ]
+        const reqYears = input.requiredYears ?? null;
+        const desc = input.description ?? null;
+
+        // Use existing DB connection with raw SQL
+        const db = getDb();
+        const result = await db.execute(
+          sql`INSERT INTO job_postings (title, role, requiredSkills, requiredYears, description) VALUES (${input.title}, ${input.role}, ${skillsJson}, ${reqYears}, ${desc})`
         );
-        const insertId = (result as any).insertId;
-        console.log("[job.create] Success, id:", insertId);
-        return { id: insertId };
+
+        return { id: (result as any)[0].insertId };
       } catch (err: any) {
-        console.error("[job.create] FAILED:", err.message, "code:", err.code, "sqlState:", err.sqlState);
-        throw err;
-      } finally {
-        await conn.end();
+        console.error("[job.create] FAILED:", err.message, "code:", err.code);
+        // Return the error so client can see it
+        throw new Error(`DB Error: ${err.message} (code: ${err.code || "unknown"})`);
       }
     }),
 

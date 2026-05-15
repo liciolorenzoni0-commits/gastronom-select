@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createRouter, publicQuery } from "./middleware";
 import { findCandidateByToken, findCandidateById, listCandidates, updateCandidateStatus } from "./queries/candidates";
-import { createConnection } from "mysql2/promise";
-import { env } from "./lib/env";
+import { getDb } from "./queries/connection";
+import { sql } from "drizzle-orm";
 
 export const candidateRouter = createRouter({
   getByToken: publicQuery
@@ -42,27 +42,16 @@ export const candidateRouter = createRouter({
       })
     )
     .mutation(async ({ input }) => {
-      // Use raw SQL to avoid Drizzle column name issues
-      const conn = await createConnection(env.databaseUrl);
       try {
-        const tagsJson = input.tags && input.tags.length > 0 ? JSON.stringify(input.tags) : "[]";
-        const [result] = await conn.execute(
-          `INSERT INTO candidates (token, fullName, email, phone, role, experienceYears, tags, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            input.token,
-            input.fullName,
-            input.email || null,
-            input.phone || null,
-            input.role,
-            input.experienceYears ?? null,
-            tagsJson,
-            "active",
-          ]
+        const tagsJson = JSON.stringify(input.tags || []);
+        const db = getDb();
+        const result = await db.execute(
+          sql`INSERT INTO candidates (token, fullName, email, phone, role, experienceYears, tags, status) VALUES (${input.token}, ${input.fullName}, ${input.email || null}, ${input.phone || null}, ${input.role}, ${input.experienceYears || null}, ${tagsJson}, 'active')`
         );
-        const insertId = (result as any).insertId;
-        return { id: insertId, token: input.token };
-      } finally {
-        await conn.end();
+        return { id: (result as any)[0].insertId, token: input.token };
+      } catch (err: any) {
+        console.error("[candidate.create] FAILED:", err.message, "code:", err.code);
+        throw new Error(`DB Error: ${err.message} (code: ${err.code || "unknown"})`);
       }
     }),
 
