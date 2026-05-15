@@ -44,8 +44,8 @@ export const aiSummaryRouter = createRouter({
         evaluationId: input.evaluationId,
         executiveSummary: summary.executiveSummary,
         recommendationScore: summary.recommendationScore,
-        strengths: summary.strengths,
-        concerns: summary.concerns,
+        strengths: JSON.stringify(summary.strengths),
+        concerns: JSON.stringify(summary.concerns),
         culturalFit: summary.culturalFit,
       });
 

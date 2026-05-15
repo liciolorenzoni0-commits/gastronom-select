@@ -1,26 +1,16 @@
 import { z } from "zod";
 import { createRouter, publicQuery } from "./middleware";
-import { getDb } from "./queries/connection";
-import { jobPostings } from "@db/schema";
-import { eq, desc } from "drizzle-orm";
+import { listJobs, findJobById, createJob, updateJob, deactivateJob } from "./queries/jobs";
 
 export const jobRouter = createRouter({
   list: publicQuery.query(async () => {
-    return getDb()
-      .select()
-      .from(jobPostings)
-      .orderBy(desc(jobPostings.createdAt));
+    return listJobs();
   }),
 
   getById: publicQuery
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
-      const rows = await getDb()
-        .select()
-        .from(jobPostings)
-        .where(eq(jobPostings.id, input.id))
-        .limit(1);
-      return rows[0] || null;
+      return findJobById(input.id);
     }),
 
   create: publicQuery
@@ -41,24 +31,14 @@ export const jobRouter = createRouter({
       })
     )
     .mutation(async ({ input }) => {
-      const result = await getDb()
-        .insert(jobPostings)
-        .values({
-          title: input.title,
-          role: input.role,
-          requiredSkills: input.requiredSkills || [],
-          requiredYears: input.requiredYears || null,
-          description: input.description || null,
-        })
-        .$returningId();
-
-      const newJob = await getDb()
-        .select()
-        .from(jobPostings)
-        .where(eq(jobPostings.id, result[0].id))
-        .limit(1);
-
-      return newJob[0];
+      const id = await createJob({
+        title: input.title,
+        role: input.role,
+        requiredSkills: input.requiredSkills || [],
+        requiredYears: input.requiredYears || null,
+        description: input.description || null,
+      });
+      return { id };
     }),
 
   update: publicQuery
@@ -77,26 +57,14 @@ export const jobRouter = createRouter({
     )
     .mutation(async ({ input }) => {
       const { id, ...data } = input;
-      await getDb()
-        .update(jobPostings)
-        .set(data)
-        .where(eq(jobPostings.id, id));
-
-      const rows = await getDb()
-        .select()
-        .from(jobPostings)
-        .where(eq(jobPostings.id, id))
-        .limit(1);
-      return rows[0] || null;
+      await updateJob(id, data);
+      return findJobById(id);
     }),
 
   delete: publicQuery
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
-      await getDb()
-        .update(jobPostings)
-        .set({ isActive: false })
-        .where(eq(jobPostings.id, input.id));
+      await deactivateJob(input.id);
       return { success: true };
     }),
 });

@@ -4,6 +4,11 @@ import { getDb } from "./queries/connection";
 import { candidates, evaluations } from "@db/schema";
 import { eq, like, or } from "drizzle-orm";
 
+function parseJsonField<T>(value: string | null): T | null {
+  if (!value) return null;
+  try { return JSON.parse(value) as T; } catch { return null; }
+}
+
 export const portalRouter = createRouter({
   getCandidates: publicQuery
     .input(z.object({ token: z.string() }))
@@ -43,6 +48,7 @@ export const portalRouter = createRouter({
 
           result.push({
             ...candidateRows[0],
+            tags: parseJsonField<string[]>(candidateRows[0].tags),
             evaluations: candidateEvals,
           });
         }

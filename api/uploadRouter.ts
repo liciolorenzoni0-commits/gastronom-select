@@ -6,6 +6,15 @@ import { getDb } from "./queries/connection";
 import { candidates, jobPostings } from "@db/schema";
 import { eq } from "drizzle-orm";
 
+function parseJsonField<T>(value: string | null): T | null {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
 export const uploadRouter = createRouter({
   uploadCv: publicQuery
     .input(
@@ -16,14 +25,12 @@ export const uploadRouter = createRouter({
       })
     )
     .mutation(async ({ input }) => {
-      // Decode base64 to buffer
       const buffer = Buffer.from(input.base64Pdf, "base64");
 
       if (buffer.length > 5 * 1024 * 1024) {
         throw new Error("El PDF no debe exceder 5MB");
       }
 
-      // Extract text from PDF
       const cvText = await extractTextFromPdf(buffer);
 
       if (!cvText || cvText.trim().length < 50) {
@@ -32,7 +39,6 @@ export const uploadRouter = createRouter({
         );
       }
 
-      // Calculate match score if job posting is provided
       let matchScore: number | null = null;
       if (input.jobPostingId) {
         const jobs = await getDb()
@@ -43,7 +49,7 @@ export const uploadRouter = createRouter({
 
         if (jobs.length > 0) {
           const job = jobs[0];
-          const requiredSkills = job.requiredSkills || [];
+          const requiredSkills = parseJsonField<string[]>(job.requiredSkills) || [];
           const result = calculateMatch(
             cvText,
             requiredSkills,
@@ -54,7 +60,6 @@ export const uploadRouter = createRouter({
         }
       }
 
-      // Store CV text and match score
       await getDb()
         .update(candidates)
         .set({
@@ -105,9 +110,10 @@ export const uploadRouter = createRouter({
         throw new Error("El candidato no tiene CV cargado");
       }
 
+      const requiredSkills = parseJsonField<string[]>(job.requiredSkills) || [];
       const result = calculateMatch(
         candidate.cvText,
-        job.requiredSkills || [],
+        requiredSkills,
         job.requiredYears,
         job.description
       );
@@ -133,8 +139,8 @@ export const uploadRouter = createRouter({
       }
 
       const job = jobRows[0];
+      const requiredSkills = parseJsonField<string[]>(job.requiredSkills) || [];
 
-      // Get all candidates with CVs for this role
       const allCandidates = await getDb()
         .select()
         .from(candidates)
@@ -145,16 +151,17 @@ export const uploadRouter = createRouter({
         .map((c) => {
           const result = calculateMatch(
             c.cvText!,
-            job.requiredSkills || [],
+            requiredSkills,
             job.requiredYears,
             job.description
           );
+          const tags = parseJsonField<string[]>(c.tags) || [];
           return {
             candidateId: c.id,
             candidateName: c.fullName,
             role: c.role,
             experienceYears: c.experienceYears,
-            tags: c.tags || [],
+            tags,
             ...result,
           };
         })
