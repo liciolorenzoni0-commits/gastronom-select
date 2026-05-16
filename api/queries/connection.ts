@@ -9,18 +9,20 @@ type DrizzleInstance = ReturnType<typeof drizzle<typeof fullSchema>>;
 
 let instance: DrizzleInstance | null = null;
 
+// LAZY initialization — pool is only created when first needed
+// This ensures boot.ts (DDL migration) runs BEFORE any pool exists
 export function getDb(): DrizzleInstance {
   if (!instance) {
+    console.log("[connection] Creating new Drizzle instance (mode: default)");
     instance = drizzle(env.databaseUrl, {
-      mode: "planetscale",
+      mode: "default",
       schema: fullSchema,
     });
   }
   return instance;
 }
 
-// Call this after DDL operations to force a new pool on next getDb()
 export function resetDb() {
-  console.log("[connection] Resetting Drizzle pool");
+  console.log("[connection] Resetting Drizzle instance");
   instance = null;
 }

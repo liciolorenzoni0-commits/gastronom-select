@@ -35,18 +35,32 @@ export const jobRouter = createRouter({
     .mutation(async ({ input }) => {
       try {
         const db = getDb();
-        const result = await db.insert(jobPostings).values({
+
+        // REMOVED .$returningId() — it breaks with mysql2/TiDB
+        // MySQL doesn't support RETURNING natively. Drizzle emulates it
+        // but fails silently on TiDB Cloud.
+        await db.insert(jobPostings).values({
           title: input.title,
           role: input.role,
           requiredSkills: JSON.stringify(input.requiredSkills || []),
           requiredYears: input.requiredYears ?? null,
           description: input.description ?? null,
-        }).$returningId();
+        });
 
-        return { success: true, id: result[0].id };
+        return { success: true };
       } catch (err: any) {
-        console.error("[job.create] FAILED:", err.message, "code:", err.code);
-        throw new Error(`Insert failed: ${err.message}`);
+        // Log the REAL error with full details
+        console.error("[job.create] COMPLETE ERROR:", {
+          message: err.message,
+          code: err.code,
+          errno: err.errno,
+          sqlState: err.sqlState,
+          sql: err.sql,
+          stack: err.stack?.split("\n")?.slice(0, 3),
+        });
+        throw new Error(
+          `Insert failed: ${err.message} (code=${err.code}, errno=${err.errno}, sqlState=${err.sqlState})`
+        );
       }
     }),
 
